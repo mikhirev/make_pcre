@@ -48,7 +48,8 @@ Capturing strings
 
 When matching found, `pcre_find` sets variable `$(0)` to whole matched string
 and variables `$(1)`, `$(2)`, ... to substrings captured by round brackets
-(like perl does). These variables can be used until the next `pcre_find` call
+(like perl does). Maximum number of strings that can be captured is 256 (`$(0)`
+to `$(255)`). These variables can be used until the next `pcre_find` call
 because it will reset them.
 
 Options
@@ -70,7 +71,7 @@ The following options are implemented:
 - `s` forces `.` metacharacter to match any character including newline.
   The same as in Perl;
 - `u` changes the way of processing \B, \b, \D, \d, \S, \s, \W, \w and some
-  of the POSIX character classes forsing them to use Unicode properties.
+  of the POSIX character classes forsing them to use Unicode properties;
 - `U` ungreedies quantifiers by default (they still can be made greedy
   if followed by `?`);
 - `x` forces regexp to ignore unescaped whitespaces and comments after `#`.
