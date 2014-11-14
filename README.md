@@ -32,6 +32,12 @@ Copy pcre.so into the directory where your makefile is stored.
 Usage
 =====
 
+Load the plugin by adding
+
+    load pcre.so
+
+to your makefile.
+
 Currently only one function `pcre_find` (with shorthand `m`) is implemented.
 It is similar to builtin `findstring` function, but it takes PCRE pattern
 instead substring as first argument:
