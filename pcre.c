@@ -48,6 +48,9 @@ char *match(const char *name, int argc, char **argv)
 			case 'E':
 				pat = gmk_expand(argv[0]);
 				break;
+			case 'i':
+				co |= PCRE_CASELESS;
+				break;
 			case 'm':
 				co |= PCRE_MULTILINE;
 				break;

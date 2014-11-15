@@ -64,13 +64,14 @@ Options
 `pcre_find` can take optional third argument consisting of one ore more
 characters, each of which enables some option:
 
-    $(pcre_find PATTERN,IN,EmsuUxX8)
-    $(m PATTERN,IN,EmsuUxX8)
+    $(pcre_find PATTERN,IN,EimsuUxX8)
+    $(m PATTERN,IN,EimsuUxX8)
 
 The following options are implemented:
 
 - `E` enables expansion of pattern before compilation. Note that you will need
   to use `$$` instead `$` for matching end of line in this case;
+- `i` makes search case insensitive. The same as in Perl;
 - `m` makes regexp treating string as multi-line, i. e. `^` and `$` will match
   immediately after or immediately before internal newlines. The same
   as in Perl;
