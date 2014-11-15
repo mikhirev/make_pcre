@@ -16,7 +16,7 @@ check: $(tests)
 
 test001 = '$(m ^test$,test)' = test
 test002: var = es
-test002 = '$(m ^t$(var)t$$,test,e)' = test
+test002 = '$(m ^t$(var)t$$,test,E)' = test
 test003 = '$(m ^t(es)t$,test)$0$1' = testtestes -a -z '$(m a,b)$0$1'
 
 test%:

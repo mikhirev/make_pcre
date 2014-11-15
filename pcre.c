@@ -45,7 +45,7 @@ char *match(const char *name, int argc, char **argv)
 	if (argc > 2) {
 		for (p = argv[2]; *p != '\0'; p++) {
 			switch (*p) {
-			case 'e':
+			case 'E':
 				pat = gmk_expand(argv[0]);
 				break;
 			case 'm':
