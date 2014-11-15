@@ -1,4 +1,4 @@
-MAKE_INCLUDE_DIR := $(HOME)/src/make-4.1
+MAKE_INCLUDE := -I$(HOME)/src/make-4.1
 CFLAGS = -Wall
 
 tests = test001 test002 test003
@@ -10,7 +10,7 @@ tests = test001 test002 test003
 pcre.so: CFLAGS += $(shell pcre-config --cflags)
 pcre.so: LDFLAGS += $(shell pcre-config --libs)
 pcre.so: pcre.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) -I$(MAKE_INCLUDE_DIR) -fPIC $(LDFLAGS) -shared -o $@ $<
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(MAKE_INCLUDE) -fPIC $(LDFLAGS) -shared -o $@ $<
 
 check: $(tests)
 
