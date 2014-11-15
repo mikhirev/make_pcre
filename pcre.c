@@ -36,7 +36,7 @@ char *match(const char *name, int argc, char **argv)
 	pcre *re;
 	const char *err;
 	int erroffset;
-	char *str;
+	char *str = NULL;
 	int ncap = 0;
 	int ovec[MAX_CAP*3];
 	char *retstr = NULL;
@@ -86,6 +86,7 @@ char *match(const char *name, int argc, char **argv)
 		re = pcre_compile(argv[0], 0, &err, &erroffset, NULL);
 	} else {
 		re = pcre_compile(pat, 0, &err, &erroffset, NULL);
+		gmk_free(pat);
 	}
 	if (re == NULL) {
 		fprintf(stderr, "%s: %d: %s\n", name, erroffset, err);
@@ -112,6 +113,9 @@ end_match:
 		sprintf(mk_set, "define %d\n%s\nendef\n", i, str + ovec[i*2]);
 		*(str + ovec[i*2 + 1]) = c;
 		gmk_eval(mk_set, NULL);
+	}
+	if (str != NULL) {
+		gmk_free(str);
 	}
 	return retstr;
 }
