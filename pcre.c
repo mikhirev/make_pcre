@@ -26,8 +26,6 @@ int plugin_is_GPL_compatible;
 
 const int MAX_CAP = 256;
 
-static char *mk_resetvars;
-
 char *match(const char *name, int argc, char **argv)
 {
 	char *pat = NULL;
@@ -80,8 +78,6 @@ char *match(const char *name, int argc, char **argv)
 		}
 	}
 
-	gmk_eval(mk_resetvars, NULL);
-
 	if (pat == NULL) {
 		re = pcre_compile(argv[0], 0, &err, &erroffset, NULL);
 	} else {
@@ -114,6 +110,11 @@ end_match:
 		*(str + ovec[i*2 + 1]) = c;
 		gmk_eval(mk_set, NULL);
 	}
+	for (; i < MAX_CAP; i++) {
+		char mk_set[14];
+		sprintf(mk_set, "undefine %d\n", i);
+		gmk_eval(mk_set, NULL);
+	}
 	if (str != NULL) {
 		gmk_free(str);
 	}
@@ -122,16 +123,6 @@ end_match:
 
 int pcre_gmk_setup()
 {
-	int i;
-
-	mk_resetvars = malloc(MAX_CAP * 13);
-	*mk_resetvars = '\0';
-	for (i = 0; i < MAX_CAP; i++) {
-		char line[14];
-		sprintf(line, "undefine %d\n", i);
-		strncat(mk_resetvars, line, 13);
-	}
-
 	gmk_add_function("pcre_find", (gmk_func_ptr)match, 2, 3, GMK_FUNC_NOEXPAND);
 	gmk_add_function("m", (gmk_func_ptr)match, 2, 3, GMK_FUNC_NOEXPAND);
 	return 1;
