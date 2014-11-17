@@ -14,10 +14,22 @@ pcre.so: pcre.c
 
 check: $(tests)
 
+
+### TEST EXPRESSIONS ###
+# each expression is passed to test(1)
+
+# simple test for pattern matching
 test001 = '$(m ^test$,test)' = test
+
+# test for pattern expansion
 test002: var = es
 test002 = '$(m ^t$(var)t$$,test,E)' = test
+
+# test for string capturing by number
 test003 = '$(m ^t(es)t$,test)$0$1' = testtestes -a -z '$(m a,b)$0$1'
+
+### END OF TEST EXPRESSIONS ###
+
 
 test%:
 	@if [ $($@) ] ; then \

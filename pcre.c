@@ -24,53 +24,55 @@
 
 int plugin_is_GPL_compatible;
 
-const int MAX_CAP = 256;
+const int MAX_CAP = 256;   /* maximum number of substrings to capture */
+const int MAX_CAP_LEN = 3; /* number of decimal digits in MAX_CAP */
 
+/* match() - function to be attached to make pattern matching function */
 char *match(const char *name, int argc, char **argv)
 {
-	char *pat = NULL;
-	char *p;
-	int co = 0;
-	pcre *re;
-	const char *err;
-	int erroffset;
-	char *str = NULL;
-	int ncap = 0;
-	int ovec[MAX_CAP*3];
-	char *retstr = NULL;
-	int i;
+	char *pat = NULL;    /* expanded pattern */
+	char *p;             /* iteration pointer */
+	int co = 0;          /* pattern compilation options */
+	pcre *re;            /* compiled regexp */
+	const char *err;     /* compilation error */
+	int erroffset;       /* offset of pattern character whwre error occured */
+	char *str = NULL;    /* expanded subject string */
+	int ncap = 0;        /* number of captured substrings */
+	int ovec[MAX_CAP*3]; /* ovector */
+	char *retstr = NULL; /* string to be returned */
+	int i;               /* iterator */
 
-	if (argc > 2) {
+	if (argc > 2) { /* options provided, parse them */
 		for (p = argv[2]; *p != '\0'; p++) {
 			switch (*p) {
-			case 'E':
+			case 'E': /* expand pattern */
 				pat = gmk_expand(argv[0]);
 				break;
-			case 'i':
+			case 'i': /* ignore case */
 				co |= PCRE_CASELESS;
 				break;
-			case 'm':
+			case 'm': /* multi-line */
 				co |= PCRE_MULTILINE;
 				break;
-			case 's':
+			case 's': /* single-line */
 				co |= PCRE_DOTALL;
 				break;
-			case 'u':
+			case 'u': /* use Unicode properties */
 				co |= PCRE_UCP;
 				break;
-			case 'U':
+			case 'U': /* ungreedy quantifiers */
 				co |= PCRE_UNGREEDY;
 				break;
-			case 'x':
+			case 'x': /* extended regexp */
 				co |= PCRE_EXTENDED;
 				break;
-			case 'X':
+			case 'X': /* PCRE extras */
 				co |= PCRE_EXTRA;
 				break;
-			case '8':
+			case '8': /* UTF-8 */
 				co |= PCRE_UTF8;
 				break;
-			default:
+			default: /* unknown option */
 				fprintf(stderr, "%s: unknown option `%c'\n",
 						name, *p);
 				break;
@@ -78,40 +80,40 @@ char *match(const char *name, int argc, char **argv)
 		}
 	}
 
-	if (pat == NULL) {
+	if (pat == NULL) { /* compile unexpanded pattern */
 		re = pcre_compile(argv[0], 0, &err, &erroffset, NULL);
-	} else {
+	} else {           /* compile expanded pattern */
 		re = pcre_compile(pat, 0, &err, &erroffset, NULL);
 		gmk_free(pat);
 	}
-	if (re == NULL) {
+	if (re == NULL) { /* compilation error */
 		fprintf(stderr, "%s: %d: %s\n", name, erroffset, err);
 		goto end_match;
 	}
 
+	/* expand subject string and execute regexp */
 	str = gmk_expand(argv[1]);
-
 	ncap = pcre_exec(re, NULL, str, strlen(str), 0, 0, ovec, MAX_CAP*3);
 	pcre_free(re);
 
 end_match:
-	if (ncap) {
+	if (ncap) { /* set retstr to matched substring */
 		int len = ovec[1] - ovec[0];
 		retstr = gmk_alloc(len + 1);
 		strncpy(retstr, str + ovec[0], len);
 		retstr[len] = '\0';
 	}
-	for (i = 0; i < ncap; i++) {
+	for (i = 0; (i < ncap) && (i < MAX_CAP); i++) { /* set make vars to captured substrings */
 		char c = *(str + ovec[i*2 + 1]);
 		*(str + ovec[i*2 + 1]) = '\0';
 		int len = ovec[i*2 + 1] - ovec[i];
-		char mk_set[len + 18];
+		char mk_set[len + MAX_CAP_LEN + 16];
 		sprintf(mk_set, "define %d\n%s\nendef\n", i, str + ovec[i*2]);
 		*(str + ovec[i*2 + 1]) = c;
 		gmk_eval(mk_set, NULL);
 	}
-	for (; i < MAX_CAP; i++) {
-		char mk_set[14];
+	for (; i < MAX_CAP; i++) { /* udefine remaining make vars */
+		char mk_set[MAX_CAP_LEN + 11];
 		sprintf(mk_set, "undefine %d\n", i);
 		gmk_eval(mk_set, NULL);
 	}
@@ -123,6 +125,7 @@ end_match:
 
 int pcre_gmk_setup()
 {
+	/* add function for pattern matching */
 	gmk_add_function("pcre_find", (gmk_func_ptr)match, 2, 3, GMK_FUNC_NOEXPAND);
 	gmk_add_function("m", (gmk_func_ptr)match, 2, 3, GMK_FUNC_NOEXPAND);
 	return 1;
