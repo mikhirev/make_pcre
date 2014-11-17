@@ -117,7 +117,7 @@ char *match(const char *name, int argc, char **argv)
 	str = gmk_expand(argv[1]);
 	ncap = pcre_exec(re, NULL, str, strlen(str), 0, 0, ovec, MAX_CAP*3);
 	pcre_free(re);
-	if (ncap < 0) { /* error occured */
+	if ((ncap < 0) && (ncap != PCRE_ERROR_NOMATCH)) { /* error occured */
 		fprintf(stderr, "%s: pattern matching error: %d\n", name, ncap);
 	}
 
