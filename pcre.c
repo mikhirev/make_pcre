@@ -33,9 +33,10 @@ char *match(const char *name, int argc, char **argv)
 	char *pat = NULL;    /* expanded pattern */
 	char *p;             /* iteration pointer */
 	int co = 0;          /* pattern compilation options */
+	int b;               /* PCRE configuration option value */
 	pcre *re;            /* compiled regexp */
 	const char *err;     /* compilation error */
-	int erroffset;       /* offset of pattern character whwre error occured */
+	int erroffset;       /* offset of pattern character where error occured */
 	char *str = NULL;    /* expanded subject string */
 	int ncap = 0;        /* number of captured substrings */
 	int ovec[MAX_CAP*3]; /* ovector */
@@ -58,7 +59,18 @@ char *match(const char *name, int argc, char **argv)
 				co |= PCRE_DOTALL;
 				break;
 			case 'u': /* use Unicode properties */
-				co |= PCRE_UCP;
+				pcre_config(PCRE_CONFIG_UNICODE_PROPERTIES,
+						&b);
+				if (b) {
+					co |= PCRE_UCP;
+				} else {
+					fprintf(stderr, "%s: PCRE library "
+							"does not support "
+							"Unicode properties, "
+							"`%c' option is "
+							"unavailable\n",
+							name, *p);
+				}
 				break;
 			case 'U': /* ungreedy quantifiers */
 				co |= PCRE_UNGREEDY;
@@ -70,7 +82,17 @@ char *match(const char *name, int argc, char **argv)
 				co |= PCRE_EXTRA;
 				break;
 			case '8': /* UTF-8 */
-				co |= PCRE_UTF8;
+				pcre_config(PCRE_CONFIG_UTF8, &b);
+				if (b) {
+					co |= PCRE_UTF8;
+				} else {
+					fprintf(stderr, "%s: PCRE library "
+							"does not support "
+							"UTF-8, "
+							"`%c' option is "
+							"unavailable\n",
+							name, *p);
+				}
 				break;
 			default: /* unknown option */
 				fprintf(stderr, "%s: unknown option `%c'\n",
@@ -95,9 +117,12 @@ char *match(const char *name, int argc, char **argv)
 	str = gmk_expand(argv[1]);
 	ncap = pcre_exec(re, NULL, str, strlen(str), 0, 0, ovec, MAX_CAP*3);
 	pcre_free(re);
+	if (ncap < 0) { /* error occured */
+		fprintf(stderr, "%s: pattern matching error: %d\n", name, ncap);
+	}
 
 end_match:
-	if (ncap) { /* set retstr to matched substring */
+	if (ncap > 0) { /* set retstr to matched substring */
 		int len = ovec[1] - ovec[0];
 		retstr = gmk_alloc(len + 1);
 		strncpy(retstr, str + ovec[0], len);
