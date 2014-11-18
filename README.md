@@ -64,7 +64,7 @@ because it will reset them.
 
 `pcre_find` also provides ability to set named variables to matched substrings.
 It can be useful if you want to preserve captured value after another matching
-function called or if your pattern is quiet complicated, and it is difficult
+function called or if your pattern is quite complicated, and it is difficult
 to handle substring numbers.
 
 In PCRE, a subpattern can be named in one of three ways: `(?<name>...)`
