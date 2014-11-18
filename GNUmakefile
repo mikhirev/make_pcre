@@ -1,7 +1,7 @@
 MAKE_INCLUDE := -I$(HOME)/src/make-4.1
 CFLAGS = -Wall
 
-tests = test001 test002 test003
+tests = test001 test002 test003 test004
 
 -load pcre.so
 
@@ -27,6 +27,9 @@ test002 = '$(m ^t$(var)t$$,test,E)' = test
 
 # test for string capturing by number
 test003 = '$(m ^t(es)t$,test)$0$1' = testtestes -a -z '$(m a,b)$0$1'
+
+# test named string capturing
+test004 = '$(m ^t(?<var>es)t$,test)' = test -a '$(var)' = es
 
 ### END OF TEST EXPRESSIONS ###
 

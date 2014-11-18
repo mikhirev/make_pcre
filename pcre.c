@@ -27,6 +27,36 @@ int plugin_is_GPL_compatible;
 const int MAX_CAP = 256;   /* maximum number of substrings to capture */
 const int MAX_CAP_LEN = 3; /* number of decimal digits in MAX_CAP */
 
+/* set_named_vars() - set make variables to substrings captured by name */
+int set_named_vars(const pcre *re, const char *subj, int *ovec, const int ncap)
+{
+	int ncount;      /* name count */
+	int nentrysize;  /* size of name entry */
+	char *ntable;    /* name table */
+	int i;           /* loop iterator */
+	char *n;         /* name pointer */
+	const char *cap; /* captured substring */
+	int caplen;      /* length of captured substring */
+
+	pcre_fullinfo(re, NULL, PCRE_INFO_NAMECOUNT, &ncount);
+	if (ncount <= 0) { /* no names defined, nothing to do */
+		return ncount;
+	}
+	pcre_fullinfo(re, NULL, PCRE_INFO_NAMEENTRYSIZE, &nentrysize);
+	pcre_fullinfo(re, NULL, PCRE_INFO_NAMETABLE, &ntable);
+	for (i = 0; i < ncount; i++) {
+		n = ntable + (i * nentrysize) + 2;
+		caplen = pcre_get_named_substring(re, subj, ovec, ncap, n, &cap);
+		if (caplen < 0) { /* unable to get substring */
+			continue;
+		}
+		char mk_set[strlen(n) + caplen + 16];
+		sprintf(mk_set, "define %s\n%s\nendef\n", n, cap);
+		gmk_eval(mk_set, NULL);
+	}
+	return i;
+}
+
 /* match() - function to be attached to make pattern matching function */
 char *match(const char *name, int argc, char **argv)
 {
@@ -116,18 +146,23 @@ char *match(const char *name, int argc, char **argv)
 	/* expand subject string and execute regexp */
 	str = gmk_expand(argv[1]);
 	ncap = pcre_exec(re, NULL, str, strlen(str), 0, 0, ovec, MAX_CAP*3);
-	pcre_free(re);
 	if ((ncap < 0) && (ncap != PCRE_ERROR_NOMATCH)) { /* error occured */
 		fprintf(stderr, "%s: pattern matching error: %d\n", name, ncap);
 	}
 
-end_match:
 	if (ncap > 0) { /* set retstr to matched substring */
 		int len = ovec[1] - ovec[0];
 		retstr = gmk_alloc(len + 1);
 		strncpy(retstr, str + ovec[0], len);
 		retstr[len] = '\0';
+
+		/* set named make vars to captured substrings */
+		set_named_vars(re, str, ovec, ncap);
 	}
+
+	pcre_free(re);
+
+end_match:
 	for (i = 0; (i < ncap) && (i < MAX_CAP); i++) { /* set make vars to captured substrings */
 		char c = *(str + ovec[i*2 + 1]);
 		*(str + ovec[i*2 + 1]) = '\0';
