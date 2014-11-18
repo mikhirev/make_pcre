@@ -27,6 +27,52 @@ int plugin_is_GPL_compatible;
 const int MAX_CAP = 256;   /* maximum number of substrings to capture */
 const int MAX_CAP_LEN = 3; /* number of decimal digits in MAX_CAP */
 
+/* set_comp_opt - set regexp option */
+int set_comp_opt(int opts, const char flag, const char *func)
+{
+	int b; /* PCRE configuration option value */
+
+	switch (flag) {
+	case 'i': /* ignore case */
+		opts |= PCRE_CASELESS;  break;
+	case 'm': /* multi-line */
+		opts |= PCRE_MULTILINE; break;
+	case 's': /* single-line */
+		opts |= PCRE_DOTALL;    break;
+	case 'u': /* use Unicode properties */
+		pcre_config(PCRE_CONFIG_UNICODE_PROPERTIES, &b);
+		if (b) {
+			opts |= PCRE_UCP;
+		} else {
+			fprintf(stderr, "%s: PCRE library does not support "
+					"Unicode properties, `%c' option is "
+					"unavailable\n",
+					func, flag);
+		}
+		break;
+	case 'U': /* ungreedy quantifiers */
+		opts |= PCRE_UNGREEDY;  break;
+	case 'x': /* extended regexp */
+		opts |= PCRE_EXTENDED;  break;
+	case 'X': /* PCRE extras */
+		opts |= PCRE_EXTRA;     break;
+	case '8': /* UTF-8 */
+		pcre_config(PCRE_CONFIG_UTF8, &b);
+		if (b) {
+			opts |= PCRE_UTF8;
+		} else {
+			fprintf(stderr, "%s: PCRE library does not support "
+					"UTF-8, `%c' option is unavailable\n",
+					func, flag);
+		}
+		break;
+	default: /* unknown option */
+		fprintf(stderr, "%s: unknown option `%c'\n", func, flag);
+		break;
+	}
+	return opts;
+}
+
 /* set_vars() - set make variables to captured substrings */
 int set_vars(const char *subj, int *ovec, const int ncap)
 {
@@ -89,7 +135,6 @@ char *match(const char *name, int argc, char **argv)
 	char *pat = NULL;    /* expanded pattern */
 	char *p;             /* iteration pointer */
 	int co = 0;          /* pattern compilation options */
-	int b;               /* PCRE configuration option value */
 	pcre *re;            /* compiled regexp */
 	const char *err;     /* compilation error */
 	int erroffset;       /* offset of pattern character where error occured */
@@ -104,63 +149,17 @@ char *match(const char *name, int argc, char **argv)
 			case 'E': /* expand pattern */
 				pat = gmk_expand(argv[0]);
 				break;
-			case 'i': /* ignore case */
-				co |= PCRE_CASELESS;
-				break;
-			case 'm': /* multi-line */
-				co |= PCRE_MULTILINE;
-				break;
-			case 's': /* single-line */
-				co |= PCRE_DOTALL;
-				break;
-			case 'u': /* use Unicode properties */
-				pcre_config(PCRE_CONFIG_UNICODE_PROPERTIES,
-						&b);
-				if (b) {
-					co |= PCRE_UCP;
-				} else {
-					fprintf(stderr, "%s: PCRE library "
-							"does not support "
-							"Unicode properties, "
-							"`%c' option is "
-							"unavailable\n",
-							name, *p);
-				}
-				break;
-			case 'U': /* ungreedy quantifiers */
-				co |= PCRE_UNGREEDY;
-				break;
-			case 'x': /* extended regexp */
-				co |= PCRE_EXTENDED;
-				break;
-			case 'X': /* PCRE extras */
-				co |= PCRE_EXTRA;
-				break;
-			case '8': /* UTF-8 */
-				pcre_config(PCRE_CONFIG_UTF8, &b);
-				if (b) {
-					co |= PCRE_UTF8;
-				} else {
-					fprintf(stderr, "%s: PCRE library "
-							"does not support "
-							"UTF-8, "
-							"`%c' option is "
-							"unavailable\n",
-							name, *p);
-				}
-				break;
-			default: /* unknown option */
-				fprintf(stderr, "%s: unknown option `%c'\n",
-						name, *p);
+			default: /* not match specific option */
+				co = set_comp_opt(co, *p, name);
 				break;
 			}
 		}
 	}
 
 	if (pat == NULL) { /* compile unexpanded pattern */
-		re = pcre_compile(argv[0], 0, &err, &erroffset, NULL);
+		re = pcre_compile(argv[0], co, &err, &erroffset, NULL);
 	} else {           /* compile expanded pattern */
-		re = pcre_compile(pat, 0, &err, &erroffset, NULL);
+		re = pcre_compile(pat, co, &err, &erroffset, NULL);
 		gmk_free(pat);
 	}
 	if (re == NULL) { /* compilation error */
