@@ -20,7 +20,7 @@ To get plugin built, simply type
 
 in source directory. Optionally, type
 
-    $ make check
+    $ make -k check
 
 to run self-tests.
 
@@ -52,11 +52,24 @@ not expanded, but IN is expanded before search.
 Capturing strings
 -----------------
 
+### Capture by number ###
+
 When matching found, `pcre_find` sets variable `$(0)` to whole matched string
 and variables `$(1)`, `$(2)`, ... to substrings captured by round brackets
-(like perl does). Maximum number of strings that can be captured is 256 (`$(0)`
+(like Perl does). Maximum number of strings that can be captured is 256 (`$(0)`
 to `$(255)`). These variables can be used until the next `pcre_find` call
 because it will reset them.
+
+### Capture by name ###
+
+`pcre_find` also provides ability to set named variables to matched substrings.
+It can be useful if you want to preserve captured value after another matching
+function called or if your pattern is quiet complicated, and it is difficult
+to handle substring numbers.
+
+In PCRE, a subpattern can be named in one of three ways: `(?<name>...)`
+or `(?'name'...)` as in Perl, or `(?P<name>...)` as in Python. If pattern
+matches, variable `$(name)` will be set to matched substring.
 
 Options
 -------
