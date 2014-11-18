@@ -27,6 +27,31 @@ int plugin_is_GPL_compatible;
 const int MAX_CAP = 256;   /* maximum number of substrings to capture */
 const int MAX_CAP_LEN = 3; /* number of decimal digits in MAX_CAP */
 
+/* set_vars() - set make variables to captured substrings */
+int set_vars(const char *subj, int *ovec, const int ncap)
+{
+	int i;           /* loop iterator */
+	const char *cap; /* captured substring */
+	int caplen;      /* length of captured substring */
+
+	for (i = 0; (i < ncap) && (i < MAX_CAP); i++) {
+		caplen = pcre_get_substring(subj, ovec, ncap, i, &cap);
+		if (caplen < 0) { /* unable to get substring */
+			continue;
+		}
+		char mk_set[MAX_CAP_LEN + caplen + 16];
+		sprintf(mk_set, "define %d\n%s\nendef\n", i, cap);
+		gmk_eval(mk_set, NULL);
+		pcre_free_substring(cap);
+	}
+	for (; i < MAX_CAP; i++) { /* udefine remaining make vars */
+		char mk_set[MAX_CAP_LEN + 11];
+		sprintf(mk_set, "undefine %d\n", i);
+		gmk_eval(mk_set, NULL);
+	}
+	return ncap;
+}
+
 /* set_named_vars() - set make variables to substrings captured by name */
 int set_named_vars(const pcre *re, const char *subj, int *ovec, const int ncap)
 {
@@ -53,6 +78,7 @@ int set_named_vars(const pcre *re, const char *subj, int *ovec, const int ncap)
 		char mk_set[strlen(n) + caplen + 16];
 		sprintf(mk_set, "define %s\n%s\nendef\n", n, cap);
 		gmk_eval(mk_set, NULL);
+		pcre_free_substring(cap);
 	}
 	return i;
 }
@@ -71,7 +97,6 @@ char *match(const char *name, int argc, char **argv)
 	int ncap = 0;        /* number of captured substrings */
 	int ovec[MAX_CAP*3]; /* ovector */
 	char *retstr = NULL; /* string to be returned */
-	int i;               /* iterator */
 
 	if (argc > 2) { /* options provided, parse them */
 		for (p = argv[2]; *p != '\0'; p++) {
@@ -163,20 +188,9 @@ char *match(const char *name, int argc, char **argv)
 	pcre_free(re);
 
 end_match:
-	for (i = 0; (i < ncap) && (i < MAX_CAP); i++) { /* set make vars to captured substrings */
-		char c = *(str + ovec[i*2 + 1]);
-		*(str + ovec[i*2 + 1]) = '\0';
-		int len = ovec[i*2 + 1] - ovec[i];
-		char mk_set[len + MAX_CAP_LEN + 16];
-		sprintf(mk_set, "define %d\n%s\nendef\n", i, str + ovec[i*2]);
-		*(str + ovec[i*2 + 1]) = c;
-		gmk_eval(mk_set, NULL);
-	}
-	for (; i < MAX_CAP; i++) { /* udefine remaining make vars */
-		char mk_set[MAX_CAP_LEN + 11];
-		sprintf(mk_set, "undefine %d\n", i);
-		gmk_eval(mk_set, NULL);
-	}
+	/* set make vars to captured substrings */
+	set_vars(str, ovec, ncap);
+
 	if (str != NULL) {
 		gmk_free(str);
 	}
