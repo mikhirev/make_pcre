@@ -37,7 +37,7 @@ test005: subj = 1234567891011121314151617181920212223242526272829303132333435363
 test005 = '$(m $(pat),$(subj),E)' = '$(subj)' -a '$(1)' = 1 -a '$(255)' = 255
 
 # test parsing pattern options
-test006 := '$(m ^TEST,testtttt,iU)' = test
+test006 := '$(m ^TEST+,testtttt,iU)' = test
 
 ### END OF TEST EXPRESSIONS ###
 
