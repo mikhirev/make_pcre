@@ -45,8 +45,8 @@ int parse_comp_opt(const char flag, const char *func)
 			return PCRE_UCP;
 		} else {
 			fprintf(stderr, "%s: PCRE library does not support "
-					"Unicode properties, `%c' option is "
-					"unavailable\n",
+					"Unicode properties, "
+					"`%c' option is unavailable\n",
 					func, flag);
 		}
 		break;
@@ -62,7 +62,8 @@ int parse_comp_opt(const char flag, const char *func)
 			return PCRE_UTF8;
 		} else {
 			fprintf(stderr, "%s: PCRE library does not support "
-					"UTF-8, `%c' option is unavailable\n",
+					"UTF-8, "
+					"`%c' option is unavailable\n",
 					func, flag);
 		}
 		break;
@@ -117,7 +118,8 @@ int set_named_vars(const pcre *re, const char *subj, int *ovec, const int ncap)
 	pcre_fullinfo(re, NULL, PCRE_INFO_NAMETABLE, &ntable);
 	for (i = 0; i < ncount; i++) {
 		n = ntable + (i * nentrysize) + 2;
-		caplen = pcre_get_named_substring(re, subj, ovec, ncap, n, &cap);
+		caplen = pcre_get_named_substring(re, subj, ovec,
+				ncap, n, &cap);
 		if (caplen < 0) { /* unable to get substring */
 			continue;
 		}
@@ -137,7 +139,7 @@ char *match(const char *name, int argc, char **argv)
 	int co = 0;          /* pattern compilation options */
 	pcre *re;            /* compiled regexp */
 	const char *err;     /* compilation error */
-	int erroffset;       /* offset of pattern character where error occured */
+	int erroffset;       /* offset in pattern where error occured */
 	char *str = NULL;    /* expanded subject string */
 	int ncap = 0;        /* number of captured substrings */
 	int ovec[MAX_CAP*3]; /* ovector */
@@ -149,7 +151,7 @@ char *match(const char *name, int argc, char **argv)
 			case 'E': /* expand pattern */
 				pat = gmk_expand(argv[0]);
 				break;
-			default: /* not match specific option */
+			default: /* not match-specific option */
 				co |= parse_comp_opt(*p, name);
 				break;
 			}
@@ -171,10 +173,12 @@ char *match(const char *name, int argc, char **argv)
 	str = gmk_expand(argv[1]);
 	ncap = pcre_exec(re, NULL, str, strlen(str), 0, 0, ovec, MAX_CAP*3);
 	if ((ncap < 0) && (ncap != PCRE_ERROR_NOMATCH)) { /* error occured */
-		fprintf(stderr, "%s: pattern matching error: %d\n", name, ncap);
+		fprintf(stderr, "%s: pattern matching error: %d\n",
+				name, ncap);
 	}
 
-	if (ncap > 0) { /* set retstr to matched substring */
+	if (ncap > 0) {
+		/* set retstr to matched substring */
 		int len = ovec[1] - ovec[0];
 		retstr = gmk_alloc(len + 1);
 		strncpy(retstr, str + ovec[0], len);
@@ -199,7 +203,8 @@ end_match:
 int pcre_gmk_setup()
 {
 	/* add function for pattern matching */
-	gmk_add_function("pcre_find", (gmk_func_ptr)match, 2, 3, GMK_FUNC_NOEXPAND);
+	gmk_add_function("pcre_find", (gmk_func_ptr)match, 2, 3,
+			GMK_FUNC_NOEXPAND);
 	gmk_add_function("m", (gmk_func_ptr)match, 2, 3, GMK_FUNC_NOEXPAND);
 	return 1;
 }
