@@ -28,21 +28,21 @@ const int MAX_CAP = 256;   /* maximum number of substrings to capture */
 const int MAX_CAP_LEN = 3; /* number of decimal digits in MAX_CAP */
 
 /* set_comp_opt - set regexp option */
-int set_comp_opt(int opts, const char flag, const char *func)
+int parse_comp_opt(const char flag, const char *func)
 {
 	int b; /* PCRE configuration option value */
 
 	switch (flag) {
 	case 'i': /* ignore case */
-		opts |= PCRE_CASELESS;  break;
+		return PCRE_CASELESS;  break;
 	case 'm': /* multi-line */
-		opts |= PCRE_MULTILINE; break;
+		return PCRE_MULTILINE; break;
 	case 's': /* single-line */
-		opts |= PCRE_DOTALL;    break;
+		return PCRE_DOTALL;    break;
 	case 'u': /* use Unicode properties */
 		pcre_config(PCRE_CONFIG_UNICODE_PROPERTIES, &b);
 		if (b) {
-			opts |= PCRE_UCP;
+			return PCRE_UCP;
 		} else {
 			fprintf(stderr, "%s: PCRE library does not support "
 					"Unicode properties, `%c' option is "
@@ -51,15 +51,15 @@ int set_comp_opt(int opts, const char flag, const char *func)
 		}
 		break;
 	case 'U': /* ungreedy quantifiers */
-		opts |= PCRE_UNGREEDY;  break;
+		return PCRE_UNGREEDY;  break;
 	case 'x': /* extended regexp */
-		opts |= PCRE_EXTENDED;  break;
+		return PCRE_EXTENDED;  break;
 	case 'X': /* PCRE extras */
-		opts |= PCRE_EXTRA;     break;
+		return PCRE_EXTRA;     break;
 	case '8': /* UTF-8 */
 		pcre_config(PCRE_CONFIG_UTF8, &b);
 		if (b) {
-			opts |= PCRE_UTF8;
+			return PCRE_UTF8;
 		} else {
 			fprintf(stderr, "%s: PCRE library does not support "
 					"UTF-8, `%c' option is unavailable\n",
@@ -70,7 +70,7 @@ int set_comp_opt(int opts, const char flag, const char *func)
 		fprintf(stderr, "%s: unknown option `%c'\n", func, flag);
 		break;
 	}
-	return opts;
+	return 0;
 }
 
 /* set_vars() - set make variables to captured substrings */
@@ -150,7 +150,7 @@ char *match(const char *name, int argc, char **argv)
 				pat = gmk_expand(argv[0]);
 				break;
 			default: /* not match specific option */
-				co = set_comp_opt(co, *p, name);
+				co |= parse_comp_opt(*p, name);
 				break;
 			}
 		}
