@@ -1,7 +1,7 @@
 MAKE_INCLUDE := -I$(HOME)/src/make-4.1
 CFLAGS = -Wall -g
 
-tests = test001 test002 test003 test004 test005 test006 test007
+tests = test001 test002 test003 test004 test005 test006
 
 -load pcre.so
 
@@ -37,8 +37,7 @@ test005: subj = 1234567891011121314151617181920212223242526272829303132333435363
 test005 = '$(m $(pat),$(subj),E)' = '$(subj)' -a '$(1)' = 1 -a '$(255)' = 255
 
 # test parsing pattern options
-test006 := '$(m ^TEST$,test,i)' = test
-test007 := '$(m ^test+,testtttt,U)' = test
+test006 := '$(m ^TEST,testtttt,iU)' = test
 
 ### END OF TEST EXPRESSIONS ###
 
