@@ -1,0 +1,11 @@
+language: c
+compiler:
+  - gcc
+  - clang
+before_install:
+  - sudo apt-get update -q
+  - wget http://ftp.gnu.org/gnu/make/make-4.1.tar.bz2 -O - | bunzip2 | tar -xvC /tmp
+install:
+  - sudo apt-get install -y libpcre3-dev
+  - pushd /tmp/make-4.1 && ./configure && make && sudo make install ; popd
+script: make -k check
