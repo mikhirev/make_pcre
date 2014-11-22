@@ -2,7 +2,8 @@ CFLAGS = -Wall -g
 PCRE_CONFIG = pcre-config
 #PCRE_CONFIG = pkg-config libpcre
 PCRE_CFLAGS := $(shell $(PCRE_CONFIG) --cflags)
-PCRE_LDFLAGS := $(shell $(PCRE_CONFIG) --libs)
+PCRE_LIBS := $(shell $(PCRE_CONFIG) --libs)
+LIBS = $(PCRE_LIBS)
 
 tests = test001 test002 test003 test004 test005 test006
 
@@ -15,8 +16,8 @@ endif
 .PHONY: check clean
 
 pcre.so: pcre.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(MAKE_CFLAGS) $(PCRE_CFLAGS) -fPIC \
-		$(LDFLAGS) $(PCRE_LDFLAGS) -shared -o $@ $<
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(MAKE_CFLAGS) -fPIC \
+		$(LDFLAGS) -shared -o $@ $< $(LIBS)
 
 check: $(tests)
 
