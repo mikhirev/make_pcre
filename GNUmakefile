@@ -5,7 +5,7 @@ PCRE_CFLAGS := $(shell $(PCRE_CONFIG) --cflags)
 PCRE_LIBS := $(shell $(PCRE_CONFIG) --libs)
 LIBS = $(PCRE_LIBS)
 
-tests = test001 test002 test003 test004 test005 test006
+tests = test001 test002 test003 test004 test005 test006 test007
 
 ifneq ($(findstring 4.,$(MAKE_VERSION)),4.)
     $(error GNU make version 4.x is required)
@@ -46,6 +46,8 @@ test005 = "$(m $(pat),$(subj),E)" = "$(subj)" -a "$(1)" = 1 -a "$(255)" = 255
 
 # test parsing pattern options
 test006 = "$(m ^TEST+,testtttt,iU)" = test
+
+test007 = "$(m a(.*)b,a\$$b)" = "a\$$b" -a "$(1)" = "\$$"
 
 ### END OF TEST EXPRESSIONS ###
 

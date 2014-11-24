@@ -27,6 +27,76 @@ int plugin_is_GPL_compatible;
 const int MAX_CAP = 256;   /* maximum number of substrings to capture */
 const int MAX_CAP_LEN = 3; /* number of decimal digits in MAX_CAP */
 
+/* esc_str() - escape string before assigning it to make variable */
+char *esc_str(const char *str)
+{
+	const char *ps; /* pointer to char in unescaped string */
+	char *esc;      /* escaped string */
+	char *pe;       /* pointer to char in escaped string */
+
+	esc = malloc(strlen(str) * 2 + 1);
+	if (esc == NULL) {
+		return NULL;
+	}
+
+	for (ps = str, pe = esc; *ps != '\0'; ps++, pe++) {
+		switch (*ps) {
+		case '$': /* prepend with '$' */
+			*pe = '$';
+			pe++;
+			break;
+		}
+		*pe = *ps;
+	}
+	*pe = '\0';
+
+	return esc;
+}
+
+/* def_var() - define make variable */
+int def_var(const char *name, const char *value)
+{
+	char *escv;  /* escaped value */
+	char *mkdef; /* variable definition for make */
+
+	escv = esc_str(value);
+	if (escv == NULL) {
+		return -1;
+	};
+	mkdef = malloc(strlen(name) + strlen(escv) + 16);
+	if (mkdef == NULL) {
+		return -1;
+	}
+	sprintf(mkdef, "define %s\n%s\nendef\n", name, escv);
+	gmk_eval(mkdef, NULL);
+
+	free(escv);
+	free(mkdef);
+	return 0;
+}
+
+/* def_nvar() define numbered make variable */
+int def_nvar(int num, const char *value)
+{
+	char *escv;  /* escaped value */
+	char *mkdef; /* variable definition for make */
+
+	escv = esc_str(value);
+	if (escv == NULL) {
+		return -1;
+	};
+	mkdef = malloc(MAX_CAP_LEN + strlen(escv) + 16);
+	if (mkdef == NULL) {
+		return -1;
+	}
+	sprintf(mkdef, "define %d\n%s\nendef\n", num, escv);
+	gmk_eval(mkdef, NULL);
+
+	free(escv);
+	free(mkdef);
+	return 0;
+}
+
 /* set_comp_opt - set regexp option */
 int parse_comp_opt(const char flag, const char *func)
 {
@@ -86,9 +156,7 @@ int set_vars(const char *subj, int *ovec, const int ncap)
 		if (caplen < 0) { /* unable to get substring */
 			continue;
 		}
-		char mk_set[MAX_CAP_LEN + caplen + 16];
-		sprintf(mk_set, "define %d\n%s\nendef\n", i, cap);
-		gmk_eval(mk_set, NULL);
+		def_nvar(i, cap);
 		pcre_free_substring(cap);
 	}
 	for (; i < MAX_CAP; i++) { /* udefine remaining make vars */
@@ -123,9 +191,7 @@ int set_named_vars(const pcre *re, const char *subj, int *ovec, const int ncap)
 		if (caplen < 0) { /* unable to get substring */
 			continue;
 		}
-		char mk_set[strlen(n) + caplen + 16];
-		sprintf(mk_set, "define %s\n%s\nendef\n", n, cap);
-		gmk_eval(mk_set, NULL);
+		def_var(n, cap);
 		pcre_free_substring(cap);
 	}
 	return i;
