@@ -16,6 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -27,6 +28,8 @@ int plugin_is_GPL_compatible;
 const int MAX_CAP = 256;   /* maximum number of substrings to capture */
 const int MAX_CAP_LEN = 3; /* number of decimal digits in MAX_CAP */
 
+const int MAX_MSG_LEN = 1023; /* max length of error/warning/info message */
+
 /* esc_str() - escape string before assigning it to make variable */
 char *esc_str(const char *str)
 {
@@ -34,7 +37,7 @@ char *esc_str(const char *str)
 	char *esc;      /* escaped string */
 	char *pe;       /* pointer to char in escaped string */
 
-	esc = malloc(strlen(str) * 2 + 1);
+	esc = gmk_alloc(strlen(str) * 2 + 1);
 	if (esc == NULL) {
 		return NULL;
 	}
@@ -53,6 +56,63 @@ char *esc_str(const char *str)
 	return esc;
 }
 
+int mk_error(const char *fmt, ...)
+{
+	va_list args;
+	char *msg, *emsg, *mk;
+
+	va_start(args, fmt);
+
+	msg = gmk_alloc(MAX_MSG_LEN+1);
+	vsprintf(msg, fmt, args);
+	emsg = esc_str(msg);
+	gmk_free(msg);
+	mk = gmk_alloc(strlen(emsg) + 10);
+	sprintf(mk, "$(error %s)", emsg);
+	gmk_free(emsg);
+	gmk_eval(mk, NULL);
+	gmk_free(mk);
+	return 0;
+}
+
+int mk_warning(const char *fmt, ...)
+{
+	va_list args;
+	char *msg, *emsg, *mk;
+
+	va_start(args, fmt);
+
+	msg = gmk_alloc(MAX_MSG_LEN+1);
+	vsprintf(msg, fmt, args);
+	emsg = esc_str(msg);
+	gmk_free(msg);
+	mk = gmk_alloc(strlen(emsg) + 12);
+	sprintf(mk, "$(warning %s)", emsg);
+	gmk_free(emsg);
+	gmk_eval(mk, NULL);
+	gmk_free(mk);
+	return 0;
+}
+
+int mk_info(const char *fmt, ...)
+{
+	va_list args;
+	char *msg, *emsg, *mk;
+
+	va_start(args, fmt);
+
+	msg = gmk_alloc(MAX_MSG_LEN+1);
+	vsprintf(msg, fmt, args);
+	emsg = esc_str(msg);
+	gmk_free(msg);
+	mk = gmk_alloc(strlen(emsg) + 9);
+	sprintf(mk, "$(info %s)", emsg);
+	gmk_free(emsg);
+	gmk_eval(mk, NULL);
+	gmk_free(mk);
+	return 0;
+}
+
 /* def_var() - define make variable */
 int def_var(const char *name, const char *value)
 {
@@ -63,15 +123,15 @@ int def_var(const char *name, const char *value)
 	if (escv == NULL) {
 		return -1;
 	};
-	mkdef = malloc(strlen(name) + strlen(escv) + 16);
+	mkdef = gmk_alloc(strlen(name) + strlen(escv) + 16);
 	if (mkdef == NULL) {
 		return -1;
 	}
 	sprintf(mkdef, "define %s\n%s\nendef\n", name, escv);
 	gmk_eval(mkdef, NULL);
 
-	free(escv);
-	free(mkdef);
+	gmk_free(escv);
+	gmk_free(mkdef);
 	return 0;
 }
 
@@ -85,15 +145,15 @@ int def_nvar(int num, const char *value)
 	if (escv == NULL) {
 		return -1;
 	};
-	mkdef = malloc(MAX_CAP_LEN + strlen(escv) + 16);
+	mkdef = gmk_alloc(MAX_CAP_LEN + strlen(escv) + 16);
 	if (mkdef == NULL) {
 		return -1;
 	}
 	sprintf(mkdef, "define %d\n%s\nendef\n", num, escv);
 	gmk_eval(mkdef, NULL);
 
-	free(escv);
-	free(mkdef);
+	gmk_free(escv);
+	gmk_free(mkdef);
 	return 0;
 }
 
@@ -114,9 +174,9 @@ int parse_comp_opt(const char flag, const char *func)
 		if (b) {
 			return PCRE_UCP;
 		} else {
-			fprintf(stderr, "%s: PCRE library does not support "
+			mk_warning("%s: PCRE library does not support "
 					"Unicode properties, "
-					"`%c' option is unavailable\n",
+					"`%c' option is ignored",
 					func, flag);
 		}
 		break;
@@ -131,14 +191,14 @@ int parse_comp_opt(const char flag, const char *func)
 		if (b) {
 			return PCRE_UTF8;
 		} else {
-			fprintf(stderr, "%s: PCRE library does not support "
+			mk_warning("%s: PCRE library does not support "
 					"UTF-8, "
-					"`%c' option is unavailable\n",
+					"`%c' option is ignored",
 					func, flag);
 		}
 		break;
 	default: /* unknown option */
-		fprintf(stderr, "%s: unknown option `%c'\n", func, flag);
+		mk_error("%s: unknown option `%c'", func, flag);
 		break;
 	}
 	return 0;
@@ -231,7 +291,7 @@ char *match(const char *name, int argc, char **argv)
 		gmk_free(pat);
 	}
 	if (re == NULL) { /* compilation error */
-		fprintf(stderr, "%s: %d: %s\n", name, erroffset, err);
+		mk_error("%s: %d: %s", name, erroffset, err);
 		goto end_match;
 	}
 
@@ -239,8 +299,7 @@ char *match(const char *name, int argc, char **argv)
 	str = gmk_expand(argv[1]);
 	ncap = pcre_exec(re, NULL, str, strlen(str), 0, 0, ovec, MAX_CAP*3);
 	if ((ncap < 0) && (ncap != PCRE_ERROR_NOMATCH)) { /* error occured */
-		fprintf(stderr, "%s: pattern matching error: %d\n",
-				name, ncap);
+		mk_error("%s: pattern matching error: %d\n", name, ncap);
 	}
 
 	if (ncap > 0) {
