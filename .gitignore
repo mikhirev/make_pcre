@@ -1,4 +1,5 @@
 *.o
 *.so
+*.gc*
 tags
 .vimrc
