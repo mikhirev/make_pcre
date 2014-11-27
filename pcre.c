@@ -28,7 +28,7 @@ int plugin_is_GPL_compatible;
 const int MAX_CAP = 256;   /* maximum number of substrings to capture */
 const int MAX_CAP_LEN = 3; /* number of decimal digits in MAX_CAP */
 
-const int MAX_MSG_LEN = 1023; /* max length of error/warning/info message */
+const int MAX_MSG_LEN = 1024; /* max length of error/warning/info message */
 
 /* esc_str() - escape string before assigning it to make variable */
 char *esc_str(const char *str)
@@ -63,8 +63,8 @@ int mk_error(const char *fmt, ...)
 
 	va_start(args, fmt);
 
-	msg = gmk_alloc(MAX_MSG_LEN+1);
-	vsprintf(msg, fmt, args);
+	msg = gmk_alloc(MAX_MSG_LEN);
+	vsnprintf(msg, MAX_MSG_LEN, fmt, args);
 	emsg = esc_str(msg);
 	gmk_free(msg);
 	mk = gmk_alloc(strlen(emsg) + 10);
@@ -82,8 +82,8 @@ int mk_warning(const char *fmt, ...)
 
 	va_start(args, fmt);
 
-	msg = gmk_alloc(MAX_MSG_LEN+1);
-	vsprintf(msg, fmt, args);
+	msg = gmk_alloc(MAX_MSG_LEN);
+	vsnprintf(msg, MAX_MSG_LEN, fmt, args);
 	emsg = esc_str(msg);
 	gmk_free(msg);
 	mk = gmk_alloc(strlen(emsg) + 12);
@@ -101,8 +101,8 @@ int mk_info(const char *fmt, ...)
 
 	va_start(args, fmt);
 
-	msg = gmk_alloc(MAX_MSG_LEN+1);
-	vsprintf(msg, fmt, args);
+	msg = gmk_alloc(MAX_MSG_LEN);
+	vsnprintf(msg, MAX_MSG_LEN, fmt, args);
 	emsg = esc_str(msg);
 	gmk_free(msg);
 	mk = gmk_alloc(strlen(emsg) + 9);
