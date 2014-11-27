@@ -24,7 +24,7 @@ in source directory. Optionally, type
 
     $ make -k check
 
-to run self-tests.
+to run self-tests. Please report me if it fails on your system.
 
 Install
 -------
@@ -86,6 +86,8 @@ The following options are implemented:
 
 - `E` enables expansion of pattern before compilation. Note that you will need
   to use `$$` instead `$` for matching end of line in this case;
+- `g` enables global search, like in Perl. Space separated list of all matched
+  substrings will be returned;
 - `i` makes search case insensitive. The same as in Perl;
 - `m` makes regexp treating string as multi-line, i. e. `^` and `$` will match
   immediately after or immediately before internal newlines. The same

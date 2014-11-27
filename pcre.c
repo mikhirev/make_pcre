@@ -271,22 +271,29 @@ int set_named_vars(const pcre *re, const char *subj, int *ovec, const int ncap)
 /* match() - function to be attached to make pattern matching function */
 char *match(const char *name, int argc, char **argv)
 {
-	char *pat = NULL;    /* expanded pattern */
-	char *p;             /* iteration pointer */
-	int co = 0;          /* pattern compilation options */
-	pcre *re;            /* compiled regexp */
-	const char *err;     /* compilation error */
-	int erroffset;       /* offset in pattern where error occured */
-	char *str = NULL;    /* expanded subject string */
-	int ncap = 0;        /* number of captured substrings */
-	int ovec[MAX_CAP*3]; /* ovector */
-	char *retstr = NULL; /* string to be returned */
+	char *pat = NULL;      /* expanded pattern */
+	char *p;               /* iteration pointer */
+	int global = 0;        /* global search? */
+	int co = 0;            /* pattern compilation options */
+	pcre *re;              /* compiled regexp */
+	const char *err;       /* compilation error */
+	int erroffset;         /* offset in pattern where error occured */
+	pcre_extra *sd = NULL; /* pattern study data */
+	char *str = NULL;      /* expanded subject string */
+	int offset = 0;        /* subject string offset */
+	int ncap = 0;          /* number of captured substrings */
+	int ovec[MAX_CAP*3];   /* ovector */
+	char *retstr = NULL;   /* string to be returned */
+	int retlen = 0;        /* length of retstr */
 
 	if (argc > 2) { /* options provided, parse them */
 		for (p = argv[2]; *p != '\0'; p++) {
 			switch (*p) {
 			case 'E': /* expand pattern */
 				pat = gmk_expand(argv[0]);
+				break;
+			case 'g': /* global search */
+				global = 1;
 				break;
 			default: /* not match-specific option */
 				co |= parse_comp_opt(*p, name);
@@ -306,23 +313,54 @@ char *match(const char *name, int argc, char **argv)
 		goto end_match;
 	}
 
-	/* expand subject string and execute regexp */
+	if (global) { /* study compiled pattern */
+		sd = pcre_study(re, 0, &err);
+		if (err) {
+			mk_warning("%s: %s", name, err);
+			sd = NULL;
+		}
+	}
+
+	/* expand subject string */
 	str = gmk_expand(argv[1]);
-	ncap = pcre_exec(re, NULL, str, strlen(str), 0, 0, ovec, MAX_CAP*3);
-	if ((ncap < 0) && (ncap != PCRE_ERROR_NOMATCH)) { /* error occured */
-		mk_error("%s: pattern matching error: %d\n", name, ncap);
-	}
 
-	if (ncap > 0) {
-		/* set retstr to matched substring */
-		int len = ovec[1] - ovec[0];
-		retstr = gmk_alloc(len + 1);
-		strncpy(retstr, str + ovec[0], len);
-		retstr[len] = '\0';
+	do {
+		/* execute regexp */
+		ncap = pcre_exec(re, sd, str, strlen(str), offset, 0,
+				ovec, MAX_CAP*3);
+		if ((ncap < 0) && (ncap != PCRE_ERROR_NOMATCH)) { /* error occured */
+			mk_error("%s: pattern matching error: %d\n", name, ncap);
+		}
 
-		/* set named make vars to captured substrings */
-		set_named_vars(re, str, ovec, ncap);
-	}
+		if (ncap > 0) { /* copy or append matched string to retstr */
+			int len = ovec[1] - ovec[0];
+			int newlen = retlen + len;
+
+			char *s = realloc(retstr, (newlen + 1));
+			if (s == NULL) { /* let make allocate memory or die */
+				s = gmk_alloc(newlen);
+				strncpy(s, retstr, retlen + 1);
+				gmk_free(retstr);
+			}
+			retstr = s;
+
+			if (retlen > 0) { /* add whitespace */
+				retstr[retlen] = ' ';
+				retlen++;
+				newlen++;
+			}
+
+			strncpy(retstr + retlen, str + ovec[0], len);
+			retlen = newlen;
+			retstr[retlen] = '\0';
+
+			/* where to start next search */
+			offset = ovec[1];
+
+			/* set named make vars to captured substrings */
+			set_named_vars(re, str, ovec, ncap);
+		}
+	} while (global && (ncap != PCRE_ERROR_NOMATCH));
 
 	pcre_free(re);
 

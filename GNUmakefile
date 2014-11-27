@@ -5,7 +5,8 @@ PCRE_CFLAGS := $(shell $(PCRE_CONFIG) --cflags)
 PCRE_LIBS := $(shell $(PCRE_CONFIG) --libs)
 LIBS = $(PCRE_LIBS)
 
-tests = test001 test002 test003 test004 test005 test006 test007
+tests = test001 test002 test003 test004 test005 test006 test007 test008 \
+        test009
 
 ifneq ($(findstring 4.,$(MAKE_VERSION)),4.)
     $(error GNU make version 4.x is required)
@@ -49,6 +50,13 @@ test006 = "$(m ^TEST+,testtttt,iU)" = test
 
 # test passing `$' characters to variable
 test007 = "$(m a(.*)b,a\$$b)" = "a\$$b" -a "$(1)" = "\$$"
+
+# test global search
+test008 = "$(m test\d,test1test2test3,g)" = "test1 test2 test3" -a \
+          "$(m test,TestesT,gi)" = "Test"
+
+# check that search performed only once without `g' option
+test009 = "$(m test\d,test1test2test3)" = "test1"
 
 ### END OF TEST EXPRESSIONS ###
 
