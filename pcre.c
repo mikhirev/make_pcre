@@ -56,10 +56,11 @@ char *esc_str(const char *str)
 	return esc;
 }
 
+/* mk_error() - pass formatted string to error make function */
 int mk_error(const char *fmt, ...)
 {
-	va_list args;
-	char *msg, *emsg, *mk;
+	va_list args;          /* function arguments */
+	char *msg, *emsg, *mk; /* buffer strings */
 
 	va_start(args, fmt);
 
@@ -75,10 +76,11 @@ int mk_error(const char *fmt, ...)
 	return 0;
 }
 
+/* mk_warning() - pass formatted string to warning make function */
 int mk_warning(const char *fmt, ...)
 {
-	va_list args;
-	char *msg, *emsg, *mk;
+	va_list args;          /* function arguments */
+	char *msg, *emsg, *mk; /* buffer strings */
 
 	va_start(args, fmt);
 
@@ -94,10 +96,11 @@ int mk_warning(const char *fmt, ...)
 	return 0;
 }
 
+/* mk_info() - pass formatted string to info make function */
 int mk_info(const char *fmt, ...)
 {
-	va_list args;
-	char *msg, *emsg, *mk;
+	va_list args;          /* function arguments */
+	char *msg, *emsg, *mk; /* buffer strings */
 
 	va_start(args, fmt);
 
@@ -157,7 +160,7 @@ int def_nvar(int num, const char *value)
 	return 0;
 }
 
-/* set_comp_opt - set regexp option */
+/* parse_comp_opt - return regexp compilation option according to flag */
 int parse_comp_opt(const char flag, const char *func)
 {
 	int b; /* PCRE configuration option value */

@@ -47,6 +47,7 @@ test005 = "$(m $(pat),$(subj),E)" = "$(subj)" -a "$(1)" = 1 -a "$(255)" = 255
 # test parsing pattern options
 test006 = "$(m ^TEST+,testtttt,iU)" = test
 
+# test passing `$' characters to variable
 test007 = "$(m a(.*)b,a\$$b)" = "a\$$b" -a "$(1)" = "\$$"
 
 ### END OF TEST EXPRESSIONS ###
