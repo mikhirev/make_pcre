@@ -210,21 +210,26 @@ int set_vars(const char *subj, int *ovec, const int ncap)
 	int i;           /* loop iterator */
 	const char *cap; /* captured substring */
 	int caplen;      /* length of captured substring */
+	int retval;      /* number of defined variables to return */
 
 	for (i = 0; (i < ncap) && (i < MAX_CAP); i++) {
 		caplen = pcre_get_substring(subj, ovec, ncap, i, &cap);
 		if (caplen < 0) { /* unable to get substring */
-			continue;
+			mk_error("cannot get substring: "
+					"pcre_get_substring() returned %d",
+					caplen);
+			break;
 		}
 		def_nvar(i, cap);
 		pcre_free_substring(cap);
 	}
+	retval = i;
 	for (; i < MAX_CAP; i++) { /* udefine remaining make vars */
 		char mk_set[MAX_CAP_LEN + 11];
 		sprintf(mk_set, "undefine %d\n", i);
 		gmk_eval(mk_set, NULL);
 	}
-	return ncap;
+	return retval;
 }
 
 /* set_named_vars() - set make variables to substrings captured by name */
@@ -249,7 +254,10 @@ int set_named_vars(const pcre *re, const char *subj, int *ovec, const int ncap)
 		caplen = pcre_get_named_substring(re, subj, ovec,
 				ncap, n, &cap);
 		if (caplen < 0) { /* unable to get substring */
-			continue;
+			mk_error("cannot get substring: "
+					"pcre_get_substring() returned %d",
+					caplen);
+			break;
 		}
 		def_var(n, cap);
 		pcre_free_substring(cap);
