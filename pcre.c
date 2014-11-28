@@ -38,7 +38,7 @@ char *esc_str(const char *str)
 	char *pe;       /* pointer to char in escaped string */
 
 	esc = gmk_alloc(strlen(str) * 2 + 1);
-	if (esc == NULL) {
+	if (esc == NULL) { /* should never happen */
 		return NULL;
 	}
 
@@ -65,10 +65,20 @@ int mk_error(const char *fmt, ...)
 	va_start(args, fmt);
 
 	msg = gmk_alloc(MAX_MSG_LEN);
+	if (msg == NULL) { /* should never happen */
+		return -1;
+	}
 	vsnprintf(msg, MAX_MSG_LEN, fmt, args);
 	emsg = esc_str(msg);
 	gmk_free(msg);
+	if (emsg == NULL) { /* should never happen */
+		return -1;
+	}
 	mk = gmk_alloc(strlen(emsg) + 10);
+	if (mk == NULL) { /* should never happen */
+		gmk_free(emsg);
+		return -1;
+	}
 	sprintf(mk, "$(error %s)", emsg);
 	gmk_free(emsg);
 	gmk_eval(mk, NULL);
@@ -85,10 +95,20 @@ int mk_warning(const char *fmt, ...)
 	va_start(args, fmt);
 
 	msg = gmk_alloc(MAX_MSG_LEN);
+	if (msg == NULL) { /* should never happen */
+		return -1;
+	}
 	vsnprintf(msg, MAX_MSG_LEN, fmt, args);
 	emsg = esc_str(msg);
 	gmk_free(msg);
+	if (emsg == NULL) { /* should never happen */
+		gmk_free(emsg);
+		return -1;
+	}
 	mk = gmk_alloc(strlen(emsg) + 12);
+	if (mk == NULL) { /* should never happen */
+		return -1;
+	}
 	sprintf(mk, "$(warning %s)", emsg);
 	gmk_free(emsg);
 	gmk_eval(mk, NULL);
@@ -105,10 +125,20 @@ int mk_info(const char *fmt, ...)
 	va_start(args, fmt);
 
 	msg = gmk_alloc(MAX_MSG_LEN);
+	if (msg == NULL) { /* should never happen */
+		return -1;
+	}
 	vsnprintf(msg, MAX_MSG_LEN, fmt, args);
 	emsg = esc_str(msg);
 	gmk_free(msg);
+	if (emsg == NULL) { /* should never happen */
+		return -1;
+	}
 	mk = gmk_alloc(strlen(emsg) + 9);
+	if (mk == NULL) { /* should never happen */
+		gmk_free(emsg);
+		return -1;
+	}
 	sprintf(mk, "$(info %s)", emsg);
 	gmk_free(emsg);
 	gmk_eval(mk, NULL);
@@ -127,7 +157,8 @@ int def_var(const char *name, const char *value)
 		return -1;
 	};
 	mkdef = gmk_alloc(strlen(name) + strlen(escv) + 16);
-	if (mkdef == NULL) {
+	if (mkdef == NULL) { /* should never happen */
+		gmk_free(escv);
 		return -1;
 	}
 	sprintf(mkdef, "define %s\n%s\nendef\n", name, escv);
@@ -149,7 +180,8 @@ int def_nvar(int num, const char *value)
 		return -1;
 	};
 	mkdef = gmk_alloc(MAX_CAP_LEN + strlen(escv) + 16);
-	if (mkdef == NULL) {
+	if (mkdef == NULL) { /* should never happen */
+		gmk_free(escv);
 		return -1;
 	}
 	sprintf(mkdef, "define %d\n%s\nendef\n", num, escv);
@@ -210,10 +242,11 @@ int parse_comp_opt(const char flag, const char *func)
 /* set_vars() - set make variables to captured substrings */
 int set_vars(const char *subj, int *ovec, const int ncap)
 {
-	int i;           /* loop iterator */
-	const char *cap; /* captured substring */
-	int caplen;      /* length of captured substring */
-	int retval;      /* number of defined variables to return */
+	int i;                           /* loop iterator */
+	const char *cap;                 /* captured substring */
+	int caplen;                      /* length of captured substring */
+	int retval;                      /* number of defined variables */
+	char mk_undef[MAX_CAP_LEN + 11]; /* buffer for undefine command */
 
 	for (i = 0; (i < ncap) && (i < MAX_CAP); i++) {
 		caplen = pcre_get_substring(subj, ovec, ncap, i, &cap);
@@ -228,9 +261,8 @@ int set_vars(const char *subj, int *ovec, const int ncap)
 	}
 	retval = i;
 	for (; i < MAX_CAP; i++) { /* udefine remaining make vars */
-		char mk_set[MAX_CAP_LEN + 11];
-		sprintf(mk_set, "undefine %d\n", i);
-		gmk_eval(mk_set, NULL);
+		sprintf(mk_undef, "undefine %d\n", i);
+		gmk_eval(mk_undef, NULL);
 	}
 	return retval;
 }
@@ -275,7 +307,7 @@ char *match(const char *name, int argc, char **argv)
 	char *p;               /* iteration pointer */
 	int global = 0;        /* global search? */
 	int co = 0;            /* pattern compilation options */
-	pcre *re;              /* compiled regexp */
+	pcre *re = NULL;       /* compiled regexp */
 	const char *err;       /* compilation error */
 	int erroffset;         /* offset in pattern where error occured */
 	pcre_extra *sd = NULL; /* pattern study data */
@@ -336,9 +368,12 @@ char *match(const char *name, int argc, char **argv)
 			int len = ovec[1] - ovec[0];
 			int newlen = retlen + len;
 
-			char *s = realloc(retstr, (newlen + 1));
+			char *s = realloc(retstr, (newlen + 2));
 			if (s == NULL) { /* let make allocate memory or die */
 				s = gmk_alloc(newlen);
+				if (s == NULL) { /* should never happen */
+					goto end_match;
+				}
 				strncpy(s, retstr, retlen + 1);
 				gmk_free(retstr);
 			}
@@ -362,9 +397,14 @@ char *match(const char *name, int argc, char **argv)
 		}
 	} while (global && (ncap != PCRE_ERROR_NOMATCH));
 
-	pcre_free(re);
-
 end_match:
+	if (re != NULL) {
+		pcre_free(re);
+	}
+	if (sd != NULL) {
+		pcre_free_study(sd);
+	}
+
 	/* set make vars to captured substrings */
 	set_vars(str, ovec, ncap);
 
