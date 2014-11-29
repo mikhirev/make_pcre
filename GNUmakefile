@@ -66,7 +66,7 @@ test010 = -n "$(shell \
     echo all: ; \
     echo \\	@true; \
     ) | $(MAKE) -f - 2>&1 | \
-    grep Stop.)"
+    fgrep Stop.)"
 
 ### END OF TEST EXPRESSIONS ###
 
