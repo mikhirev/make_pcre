@@ -402,7 +402,11 @@ end_match:
 		pcre_free(re);
 	}
 	if (sd != NULL) {
+	#if (PCRE_MAJOR < 8) || ((PCRE_MAJOR == 8) && (PCRE_MINOR < 20))
+		pcre_free(sd);
+	#else
 		pcre_free_study(sd);
+	#endif
 	}
 
 	/* set make vars to captured substrings */
