@@ -1,6 +1,6 @@
 make\_pcre is a plugin for GNU make providing ability to use Perl compatible
-regular expressions. It requires make 4.0 or higher (tested with 4.1)
-and libpcre3 (tested with 8.30).
+regular expressions. It requires make 4.0 or higher (tested with 4.0 and 4.1)
+and libpcre3 (tested with 8.12 and 8.30).
 
 [![Build Status](https://travis-ci.org/mikhirev/make_pcre.svg)](https://travis-ci.org/mikhirev/make\_pcre)
 
@@ -10,8 +10,8 @@ Installation
 Prerequisites
 -------------
 
-- GNU make 4.0+
-- libpcre3 8.30+
+- GNU make 4.x+
+- libpcre3 8.x+
 
 Build
 -----
@@ -79,8 +79,8 @@ Options
 `pcre_find` can take optional third argument consisting of one ore more
 characters, each of which enables some option:
 
-    $(pcre_find PATTERN,IN,EimsuUxX8)
-    $(m PATTERN,IN,EimsuUxX8)
+    $(pcre_find PATTERN,IN,EgimsuUxX8)
+    $(m PATTERN,IN,EgimsuUxX8)
 
 The following options are implemented:
 
