@@ -22,7 +22,7 @@ To get plugin built, simply type
 
 in source directory. Optionally, type
 
-    $ make -k check
+    $ make check
 
 to run self-tests. Please report me if it fails on your system.
 

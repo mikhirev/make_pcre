@@ -4,16 +4,18 @@ PCRE_CONFIG = pcre-config
 PCRE_CFLAGS := $(shell $(PCRE_CONFIG) --cflags)
 PCRE_LIBS := $(shell $(PCRE_CONFIG) --libs)
 LIBS = $(PCRE_LIBS)
-GNUMAKE4 = $(MAKE)
-
-.PHONY: check clean
 
 pcre.so: pcre.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(MAKE_CFLAGS) -fPIC \
 		$(LDFLAGS) -shared -o $@ $< $(LIBS)
 
 check:
-	$(GNUMAKE4) -k -f tests.mk
+	@if [ -n "`which $(GNUMAKE4)`" ] ; then \
+	    $(GNUMAKE4) -k -f tests.mk ; \
+	else \
+	    echo 'you need GNU make 4.x to run tests' ; \
+	    return 1 ; \
+	fi
 
 clean:
 	$(RM) *.o *.so
