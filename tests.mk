@@ -57,8 +57,6 @@ test010 = -n "$(shell \
 
 ### END OF TEST EXPRESSIONS ###
 
-#$(info $(value test010))
-
 test%:
 	@if [ $($@) ] ; then \
 		echo '$@ PASSED'; \

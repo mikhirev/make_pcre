@@ -11,10 +11,10 @@ pcre.so: pcre.c
 
 check:
 	@if [ -n "`which $(GNUMAKE4)`" ] ; then \
-	    $(GNUMAKE4) -k -f tests.mk ; \
+		$(GNUMAKE4) -k -f tests.mk ; \
 	else \
-	    echo 'you need GNU make 4.x to run tests' ; \
-	    return 1 ; \
+		echo 'you need GNU make 4.x to run tests' ; \
+		return 1 ; \
 	fi
 
 clean:
