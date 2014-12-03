@@ -74,12 +74,12 @@ int mk_error(const char *fmt, ...)
 	if (emsg == NULL) { /* should never happen */
 		return -1;
 	}
-	mk = gmk_alloc(strlen(emsg) + 10);
+	mk = gmk_alloc(strlen(emsg) + 35);
 	if (mk == NULL) { /* should never happen */
 		gmk_free(emsg);
 		return -1;
 	}
-	sprintf(mk, "$(error %s)", emsg);
+	sprintf(mk, "__pcre_msg=%s\n$(error $(__pcre_msg))", emsg);
 	gmk_free(emsg);
 	gmk_eval(mk, NULL);
 	gmk_free(mk);
@@ -105,11 +105,11 @@ int mk_warning(const char *fmt, ...)
 		gmk_free(emsg);
 		return -1;
 	}
-	mk = gmk_alloc(strlen(emsg) + 12);
+	mk = gmk_alloc(strlen(emsg) + 37);
 	if (mk == NULL) { /* should never happen */
 		return -1;
 	}
-	sprintf(mk, "$(warning %s)", emsg);
+	sprintf(mk, "__pcre_msg=%s\n$(warning $(__pcre_msg))", emsg);
 	gmk_free(emsg);
 	gmk_eval(mk, NULL);
 	gmk_free(mk);
@@ -134,12 +134,12 @@ int mk_info(const char *fmt, ...)
 	if (emsg == NULL) { /* should never happen */
 		return -1;
 	}
-	mk = gmk_alloc(strlen(emsg) + 9);
+	mk = gmk_alloc(strlen(emsg) + 34);
 	if (mk == NULL) { /* should never happen */
 		gmk_free(emsg);
 		return -1;
 	}
-	sprintf(mk, "$(info %s)", emsg);
+	sprintf(mk, "__pcre_msg=%s\n$(info $(__pcre_msg))", emsg);
 	gmk_free(emsg);
 	gmk_eval(mk, NULL);
 	gmk_free(mk);
