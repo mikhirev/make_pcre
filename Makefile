@@ -9,7 +9,7 @@ pcre.so: pcre.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(MAKE_CFLAGS) -fPIC \
 		$(LDFLAGS) -shared -o $@ $< $(LIBS)
 
-check:
+check: pcre.so
 	@if [ -n "`which $(GNUMAKE4)`" ] ; then \
 		$(GNUMAKE4) -k -f tests.mk ; \
 	else \

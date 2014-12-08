@@ -12,7 +12,7 @@ pcre.so: pcre.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(MAKE_CFLAGS) -fPIC \
 		$(LDFLAGS) -shared -o $@ $< $(LIBS)
 
-check:
+check: pcre.so
 	$(GNUMAKE4) -k -f tests.mk
 
 clean:

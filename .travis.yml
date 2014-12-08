@@ -11,4 +11,4 @@ before_install:
 install:
   - sudo apt-get install -y libpcre3-dev
   - pushd /tmp/make-${MAKE_VER} && ./configure && make && sudo make install ; popd
-script: /usr/local/bin/make -k check
+script: /usr/local/bin/make check
