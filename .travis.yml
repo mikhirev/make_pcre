@@ -9,6 +9,6 @@ before_install:
   - sudo apt-get update -q
   - wget http://ftp.gnu.org/gnu/make/make-${MAKE_VER}.tar.bz2 -O - | bunzip2 | tar -xvC /tmp
 install:
-  - sudo apt-get install -y libpcre3-dev
-  - pushd /tmp/make-${MAKE_VER} && ./configure && make && sudo make install ; popd
+  - sudo apt-get install -yq libpcre3-dev
+  - pushd /tmp/make-${MAKE_VER} && ./configure && make -j2 && sudo make install ; popd
 script: /usr/local/bin/make check
