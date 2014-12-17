@@ -46,14 +46,18 @@ test008 = "$(m test\d,test1test2test3,g)" = "test1 test2 test3" -a \
 test009 = "$(m test\d,test1test2test3)" = "test1"
 
 # test regexp compilation error
+#load pcre.so
+#a := $(m {2}test,test)
+#all:
+#	@true
 test010 = -n "$(shell \
     ( \
     echo load\ pcre.so ; \
-    echo a\ =\ \$\(m\ \{2\}test,test\) ; \
+    echo a\ :=\ \$$\(m\ \{2\}test,test\) ; \
     echo all: ; \
-    echo \\	@true; \
+    echo \	@true; \
     ) | $(MAKE) -f - 2>&1 | \
-    fgrep Stop.)"
+    fgrep \*\*\*\ m:\ 2:)"
 
 # test pattern substitution
 test011 = "$(s a,x,a)" = "x"
