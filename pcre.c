@@ -70,94 +70,80 @@ char *esc_str(const char *str)
 	return esc;
 }
 
+/* vmk_call() - call make function and pass formatted string as its argument */
+int vmk_call(const char *mkfunc, const char *fmt, va_list ap)
+{
+	char *mkarg, *emkarg, *mk; /* buffer strings */
+
+	mkarg = gmk_alloc(MAX_MSG_LEN + 1);
+	if (mkarg == NULL) { /* should never happen */
+		return -1;
+	}
+	vsnprintf(mkarg, MAX_MSG_LEN, fmt, ap);
+	mkarg[MAX_MSG_LEN + 1] = '\0';
+	emkarg = esc_str(mkarg);
+	gmk_free(mkarg);
+	if (emkarg == NULL) { /* should never happen */
+		return -1;
+	}
+	mk = gmk_alloc(strlen(emkarg) + strlen(mkfunc) + 30);
+	if (mk == NULL) { /* should never happen */
+		gmk_free(emkarg);
+		return -1;
+	}
+	sprintf(mk, "__pcre_arg=%s\n$(%s $(__pcre_arg))", emkarg, mkfunc);
+	gmk_free(emkarg);
+	gmk_eval(mk, NULL);
+	gmk_free(mk);
+	return 0;
+}
+
+/* mk_call() - call make function and pass formatted string as its argument */
+int mk_call(const char *mkfunc, const char *fmt, ...)
+{
+	va_list args; /* function arguments */
+	int res;      /* value to return */
+
+	va_start(args, fmt);
+	res = vmk_call(mkfunc, fmt, args);
+	va_end(args);
+	return res;
+}
+
 /* mk_error() - pass formatted string to error make function */
 int mk_error(const char *fmt, ...)
 {
 	va_list args;          /* function arguments */
-	char *msg, *emsg, *mk; /* buffer strings */
+	int res;      /* value to return */
 
 	va_start(args, fmt);
-
-	msg = gmk_alloc(MAX_MSG_LEN);
-	if (msg == NULL) { /* should never happen */
-		return -1;
-	}
-	vsnprintf(msg, MAX_MSG_LEN, fmt, args);
-	emsg = esc_str(msg);
-	gmk_free(msg);
-	if (emsg == NULL) { /* should never happen */
-		return -1;
-	}
-	mk = gmk_alloc(strlen(emsg) + 35);
-	if (mk == NULL) { /* should never happen */
-		gmk_free(emsg);
-		return -1;
-	}
-	sprintf(mk, "__pcre_msg=%s\n$(error $(__pcre_msg))", emsg);
-	gmk_free(emsg);
-	gmk_eval(mk, NULL);
-	gmk_free(mk);
-	return 0;
+	res = vmk_call("error", fmt, args);
+	va_end(args);
+	return res;
 }
 
 /* mk_warning() - pass formatted string to warning make function */
 int mk_warning(const char *fmt, ...)
 {
 	va_list args;          /* function arguments */
-	char *msg, *emsg, *mk; /* buffer strings */
+	int res;      /* value to return */
 
 	va_start(args, fmt);
-
-	msg = gmk_alloc(MAX_MSG_LEN);
-	if (msg == NULL) { /* should never happen */
-		return -1;
-	}
-	vsnprintf(msg, MAX_MSG_LEN, fmt, args);
-	emsg = esc_str(msg);
-	gmk_free(msg);
-	if (emsg == NULL) { /* should never happen */
-		gmk_free(emsg);
-		return -1;
-	}
-	mk = gmk_alloc(strlen(emsg) + 37);
-	if (mk == NULL) { /* should never happen */
-		return -1;
-	}
-	sprintf(mk, "__pcre_msg=%s\n$(warning $(__pcre_msg))", emsg);
-	gmk_free(emsg);
-	gmk_eval(mk, NULL);
-	gmk_free(mk);
-	return 0;
+	res = vmk_call("warning", fmt, args);
+	va_end(args);
+	return res;
 }
 
 /* mk_info() - pass formatted string to info make function */
 int mk_info(const char *fmt, ...)
 {
 	va_list args;          /* function arguments */
-	char *msg, *emsg, *mk; /* buffer strings */
+	int res;      /* value to return */
 
 	va_start(args, fmt);
-
-	msg = gmk_alloc(MAX_MSG_LEN);
-	if (msg == NULL) { /* should never happen */
-		return -1;
-	}
-	vsnprintf(msg, MAX_MSG_LEN, fmt, args);
-	emsg = esc_str(msg);
-	gmk_free(msg);
-	if (emsg == NULL) { /* should never happen */
-		return -1;
-	}
-	mk = gmk_alloc(strlen(emsg) + 34);
-	if (mk == NULL) { /* should never happen */
-		gmk_free(emsg);
-		return -1;
-	}
-	sprintf(mk, "__pcre_msg=%s\n$(info $(__pcre_msg))", emsg);
-	gmk_free(emsg);
-	gmk_eval(mk, NULL);
-	gmk_free(mk);
-	return 0;
+	res = vmk_call("info", fmt, args);
+	va_end(args);
+	return res;
 }
 
 /* def_var() - define make variable */
@@ -382,14 +368,9 @@ char *match(const char *name, int argc, char **argv)
 			int len = ovec[1] - ovec[0];
 			int newlen = retlen + len;
 
-			char *s = realloc(retstr, (newlen + 2));
-			if (s == NULL) { /* let make allocate memory or die */
-				s = gmk_alloc(newlen);
-				if (s == NULL) { /* should never happen */
-					goto end_match;
-				}
-				strncpy(s, retstr, retlen + 1);
-				gmk_free(retstr);
+			char *s = str_extend(retstr, newlen + 2);
+			if (s == NULL) {
+				goto end_match;
 			}
 			retstr = s;
 
