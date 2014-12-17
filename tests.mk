@@ -2,10 +2,10 @@ ifneq ($(findstring 4.,$(MAKE_VERSION)),4.)
     $(error you need GNU make 4.x to run tests)
 endif
 
-tests = test001 test002 test003 test004 test005 test006 test007 test008 \
-        test009 test010
+NUMTESTS = 23
+tests := $(foreach num,$(shell seq -f%03g $(NUMTESTS)),test$(num))
 
--load pcre.so
+load pcre.so
 
 all: $(tests)
 
@@ -54,6 +54,21 @@ test010 = -n "$(shell \
     echo \\	@true; \
     ) | $(MAKE) -f - 2>&1 | \
     fgrep Stop.)"
+
+# test pattern substitution
+test011 = "$(s a,x,a)" = "x"
+test012 = "$(s a,x,abcd)" = "xbcd"
+test013 = "$(s a,x,dcba)" = "dcbx"
+test014 = "$(s a,x,abba,g)" = "xbbx"
+test015 = "$(s a,xxx,a)" = "xxx"
+test016 = "$(s a,xxx,abcd)" = "xxxbcd"
+test017 = "$(s a,xxx,dcba)" = "dcbxxx"
+test018 = "$(s a,xxx,abba,g)" = "xxxbbxxx"
+test019 = "$(s aaa,x,aaa)" = "x"
+test020 = "$(s aaa,x,aaabcd)" = "xbcd"
+test021 = "$(s aaa,x,dcbaaa)" = "dcbx"
+test022 = "$(s aaa,x,aaabbaaa,g)" = "xbbx"
+test023 = "$(s a,x,aaa,g)" = "xxx"
 
 ### END OF TEST EXPRESSIONS ###
 

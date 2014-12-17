@@ -30,6 +30,20 @@ const int MAX_CAP_LEN = 3; /* number of decimal digits in MAX_CAP */
 
 const int MAX_MSG_LEN = 1024; /* max length of error/warning/info message */
 
+char *str_extend(char *old, size_t size)
+{
+	char *new = realloc(old, size);
+	if (new == NULL) { /* let make allocate memory or die */
+		new = gmk_alloc(size);
+		if (new == NULL) { /* should never happen */
+			return NULL;
+		}
+		strncpy(new, old, size);
+		gmk_free(old);
+	}
+	return new;
+}
+
 /* esc_str() - escape string before assigning it to make variable */
 char *esc_str(const char *str)
 {
@@ -418,11 +432,138 @@ end_match:
 	return retstr;
 }
 
+char *subst(const char *name, int argc, char **argv)
+{
+	char *pat = NULL;      /* expanded pattern */
+	char *p;               /* iteration pointer */
+	int global = 0;        /* global search? */
+	int co = 0;            /* pattern compilation options */
+	pcre *re = NULL;       /* compiled regexp */
+	const char *err;       /* compilation error */
+	int erroffset;         /* offset in pattern where error occured */
+	pcre_extra *sd = NULL; /* pattern study data */
+	char *str = NULL;      /* expanded subject string */
+	int subjlen;           /* length of subject string */
+	int replen;            /* length of replacement string */
+	int offset = 0;        /* subject string offset */
+	int ncap = 0;          /* number of captured substrings */
+	int ovec[MAX_CAP*3];   /* ovector */
+	char *retstr = NULL;   /* string to be returned */
+	int retlen = 0;        /* length of retstr */
+	int newlen;            /* length of retstr after appending new part */
+	char *s;               /* temporary string */
+
+	if (argc > 3) { /* options provided, parse them */
+		for (p = argv[3]; *p != '\0'; p++) {
+			switch (*p) {
+			case 'E': /* expand pattern */
+				pat = gmk_expand(argv[0]);
+				break;
+			case 'g': /* global search */
+				global = 1;
+				break;
+			default: /* not subst-specific option */
+				co |= parse_comp_opt(*p, name);
+				break;
+			}
+		}
+	}
+
+	if (pat == NULL) { /* compile unexpanded pattern */
+		re = pcre_compile(argv[0], co, &err, &erroffset, NULL);
+	} else {           /* compile expanded pattern */
+		re = pcre_compile(pat, co, &err, &erroffset, NULL);
+		gmk_free(pat);
+	}
+	if (re == NULL) { /* compilation error */
+		mk_error("%s: %d: %s", name, erroffset, err);
+		goto end_subst;
+	}
+
+	if (global) { /* study compiled pattern */
+		sd = pcre_study(re, 0, &err);
+		if (err) {
+			mk_warning("%s: %s", name, err);
+			sd = NULL;
+		}
+	}
+
+	/* expand subject string */
+	str = gmk_expand(argv[2]);
+
+	subjlen = strlen(str);
+	replen = strlen(argv[1]);
+
+	do {
+		/* execute regexp */
+		ncap = pcre_exec(re, sd, str, subjlen, offset, 0,
+				ovec, MAX_CAP*3);
+		if ((ncap < 0) && (ncap != PCRE_ERROR_NOMATCH)) { /* error occured */
+			mk_error("%s: pattern matching error: %d\n", name, ncap);
+			goto end_subst;
+		}
+
+		if (ncap > 0) {
+			newlen = retlen + (ovec[0] - offset) + replen;
+			s = str_extend(retstr, newlen + 1);
+			if (s == NULL) {
+				goto end_subst;
+			}
+			retstr = s;
+
+			strncpy(retstr + retlen, str + offset, ovec[0] - offset);
+			strncpy(retstr + retlen + ovec[0] - offset, argv[1], replen + 1);
+			retlen += ovec[0] - offset + replen;
+
+			/* where to start next search */
+			offset = ovec[1];
+
+			/* set named make vars to captured substrings */
+			set_named_vars(re, str, ovec, ncap);
+		}
+	} while (global && (ncap != PCRE_ERROR_NOMATCH));
+
+	newlen = retlen + subjlen - offset;
+	s = str_extend(retstr, newlen + 1);
+	if (s == NULL) {
+		goto end_subst;
+	}
+	retstr = s;
+	strncpy(retstr + retlen, str + offset, subjlen - offset + 1);
+
+end_subst:
+	if (re != NULL) {
+		pcre_free(re);
+	}
+	if (sd != NULL) {
+	#if (PCRE_MAJOR < 8) || ((PCRE_MAJOR == 8) && (PCRE_MINOR < 20))
+		pcre_free(sd);
+	#else
+		pcre_free_study(sd);
+	#endif
+	}
+
+	/* set make vars to captured substrings */
+	set_vars(str, ovec, ncap);
+
+	if (str != NULL) {
+		gmk_free(str);
+	}
+	return retstr;
+
+}
+
 int pcre_gmk_setup()
 {
 	/* add function for pattern matching */
 	gmk_add_function("pcre_find", (gmk_func_ptr)match, 2, 3,
 			GMK_FUNC_NOEXPAND);
 	gmk_add_function("m", (gmk_func_ptr)match, 2, 3, GMK_FUNC_NOEXPAND);
+
+	/* add function for pattern substitution */
+	gmk_add_function("pcre_subst", (gmk_func_ptr)subst, 3, 4,
+			GMK_FUNC_NOEXPAND);
+	gmk_add_function("s", (gmk_func_ptr)subst, 3, 4, GMK_FUNC_NOEXPAND);
+
 	return 1;
 }
