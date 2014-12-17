@@ -40,9 +40,13 @@ Load the plugin by adding
 
 to your makefile.
 
-Currently only one function `pcre_find` (with shorthand `m`) is implemented.
-It is similar to builtin `findstring` function, but it takes PCRE pattern
-instead substring as first argument:
+The plugin provides two functions: `pcre_find` (with shorthand `m`)
+and `pcre_subst` (with shorthand `s`).
+
+### `pcre_match` function ###
+
+`pcre_match` is similar to builtin `findstring` function, but it takes PCRE
+pattern instead substring as first argument:
 
     $(pcre_find PATTERN,IN)
     $(m PATTERN,IN)
@@ -51,20 +55,32 @@ It searches IN for matching PATTERN. If it occurs, the matched substring is
 returned; otherwise returned string is empty. Note that normally PATTERN is
 not expanded, but IN is expanded before search.
 
+### `pcre_subst` function ###
+
+`pcre_subst` is similar to builtin `subst` function, but it takes PCRE pattern
+instead substring as first argument:
+
+    $(pcre_subst PATTERN,REPLACEMENT,TEXT)
+    $(s PATTERN,REPLACEMENT,TEXT)
+
+It searches TEXT for matching PATTERN. If it occurs, the matched substring is
+replaced with REPLACEMENT, and the resulting string is returned. If pattern
+does not match, TEXT is returned unchanged.
+
 Capturing strings
 -----------------
 
 ### Capture by number ###
 
-When matching found, `pcre_find` sets variable `$(0)` to whole matched string
-and variables `$(1)`, `$(2)`, ... to substrings captured by round brackets
-(like Perl does). Maximum number of strings that can be captured is 256 (`$(0)`
-to `$(255)`). These variables can be used until the next `pcre_find` call
-because it will reset them.
+When matching found, both `pcre_find` or `pcre_subst` set variable `$(0)`
+to the whole matched string and variables `$(1)`, `$(2)`, ... to substrings
+captured by round brackets (like Perl does). Maximum number of strings that can
+be captured is 256 (`$(0)` to `$(255)`). These variables can be used until
+the next `pcre_find` or `pcre_subst` call that will reset them.
 
 ### Capture by name ###
 
-`pcre_find` also provides ability to set named variables to matched substrings.
+`make_pcre` also provides ability to set named variables to matched substrings.
 It can be useful if you want to preserve captured value after another matching
 function called or if your pattern is quite complicated, and it is difficult
 to handle substring numbers.
@@ -76,11 +92,13 @@ matches, variable `$(name)` will be set to matched substring.
 Options
 -------
 
-`pcre_find` can take optional third argument consisting of one ore more
-characters, each of which enables some option:
+Both `pcre_find` and `pcre_subst` can take an optional argument consisting
+of one ore more characters, each of which enables some option:
 
     $(pcre_find PATTERN,IN,EgimsuUxX8)
     $(m PATTERN,IN,EgimsuUxX8)
+    $(pcre_subst PATTERN,REPLACEMENT,TEXT,EgimsuUxX8)
+    $(s PATTERN,REPLACEMENT,TEXT,EgimsuUxX8)
 
 The following options are implemented:
 
