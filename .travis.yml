@@ -12,6 +12,6 @@ install:
   - sudo apt-get install -yq libpcre3-dev
   - pushd /tmp/make-${MAKE_VER} && ./configure && make -j2 && sudo make install ; popd
   - sudo pip install cpp-coveralls
-script: /usr/local/bin/make check `[ "$CC" = gcc ] && echo "CFLAGS=-Wall\\ -g\\ -fprofile-arcs\\ -ftest-coverage"`
+script: /usr/local/bin/make check $(test "$CC" = gcc && echo 'CFLAGS=-Wall\ -g\ -fprofile-arcs\ -ftest-coverage')
 after_success:
   - test "$CC" = gcc && coveralls
