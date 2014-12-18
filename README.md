@@ -2,7 +2,7 @@ make\_pcre is a plugin for GNU make providing ability to use Perl compatible
 regular expressions. It requires make 4.0 or higher (tested with 4.0 and 4.1)
 and libpcre3 (tested with 8.12 and 8.30).
 
-[![Build Status](https://travis-ci.org/mikhirev/make_pcre.svg)](https://travis-ci.org/mikhirev/make\_pcre)
+[![Build Status](https://img.shields.io/travis/mikhirev/make_pcre.svg)](https://travis-ci.org/mikhirev/make\_pcre)[![Coverage Status](https://img.shields.io/coveralls/mikhirev/make_pcre.svg)](https://coveralls.io/r/mikhirev/make\_pcre?branch=master)
 
 Installation
 ============
