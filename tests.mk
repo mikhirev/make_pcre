@@ -2,7 +2,7 @@ ifneq ($(findstring 4.,$(MAKE_VERSION)),4.)
     $(error you need GNU make 4.x to run tests)
 endif
 
-NUMTESTS = 25
+NUMTESTS = 30
 tests := $(foreach num,$(shell seq -f%03g $(NUMTESTS)),test$(num))
 
 load pcre.so
@@ -77,6 +77,41 @@ test023 = "$(s a,x,aaa,g)" = "xxx"
 # test expansion of substituted string
 test024 = "$(s a(.),$(1),aaabac,g)" = "abc"
 test025 = "$(s (?<var>.)a,$(var),aabaca,g)" = "abc"
+
+# test extended regexp
+define re026
+[abc] # comment
+[def] # comment
+endef
+test026 = "$(s $(re026),x,dadfbe,Egx)" = dxfx
+
+# test Unicode properties and UTF-8 support
+test027 = "$(s \w+,слово,тест тест,gu8)" = "слово слово"
+
+# test compilation error in pcre_subst and uncoupled brackets in message
+#load pcre.so
+#a := $(s (?a),b,a)
+#all:
+#	@true
+test028 = -n "$(shell \
+    ( \
+    echo load\ pcre.so ; \
+    echo a\ :=\ \$$\(s\ \(?a\),b,a\) ; \
+    echo all: ; \
+    echo \	@true; \
+    ) | $(MAKE) -f - 2>&1 | \
+    fgrep \*\*\*\ s:\ 2:)"
+
+# test multi-line subject string
+define subj029
+test
+test
+endef
+test029 = -z "$(m ^test$,$(subj029))" -a "$(m ^test$,$(subj029),m)" = test
+
+# test `s' option
+test030 = -z "$(m test.test,$(subj029))" -a \
+	  "$(s test.test,passed,$(subj029),s)" = passed
 
 ### END OF TEST EXPRESSIONS ###
 
