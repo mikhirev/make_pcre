@@ -2,7 +2,7 @@ ifneq ($(findstring 4.,$(MAKE_VERSION)),4.)
     $(error you need GNU make 4.x to run tests)
 endif
 
-NUMTESTS = 23
+NUMTESTS = 25
 tests := $(foreach num,$(shell seq -f%03g $(NUMTESTS)),test$(num))
 
 load pcre.so
@@ -73,6 +73,10 @@ test020 = "$(s aaa,x,aaabcd)" = "xbcd"
 test021 = "$(s aaa,x,dcbaaa)" = "dcbx"
 test022 = "$(s aaa,x,aaabbaaa,g)" = "xbbx"
 test023 = "$(s a,x,aaa,g)" = "xxx"
+
+# test expansion of substituted string
+test024 = "$(s a(.),$(1),aaabac,g)" = "abc"
+test025 = "$(s (?<var>.)a,$(var),aabaca,g)" = "abc"
 
 ### END OF TEST EXPRESSIONS ###
 

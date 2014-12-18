@@ -51,9 +51,9 @@ pattern instead substring as first argument:
     $(pcre_find PATTERN,IN)
     $(m PATTERN,IN)
 
-It searches IN for matching PATTERN. If it occurs, the matched substring is
-returned; otherwise returned string is empty. Note that normally PATTERN is
-not expanded, but IN is expanded before search.
+It searches *IN* for matching *PATTERN*. If it occurs, the matched substring is
+returned; otherwise returned string is empty. Note that normally *PATTERN* is
+not expanded, but *IN* is expanded before search.
 
 ### `pcre_subst` function ###
 
@@ -63,9 +63,11 @@ instead substring as first argument:
     $(pcre_subst PATTERN,REPLACEMENT,TEXT)
     $(s PATTERN,REPLACEMENT,TEXT)
 
-It searches TEXT for matching PATTERN. If it occurs, the matched substring is
-replaced with REPLACEMENT, and the resulting string is returned. If pattern
-does not match, TEXT is returned unchanged.
+It searches *TEXT* for matching *PATTERN*. If it occurs, the matched substring
+is replaced with *REPLACEMENT*, and the resulting string is returned. If pattern
+does not match, *TEXT* is returned unchanged. *PATTERN* is not expanded by default,
+*TEXT* is expanded before search, and *REPLACEMENT* string is expanded just before
+substitution.
 
 Capturing strings
 -----------------

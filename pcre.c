@@ -424,6 +424,7 @@ char *subst(const char *name, int argc, char **argv)
 	int erroffset;         /* offset in pattern where error occured */
 	pcre_extra *sd = NULL; /* pattern study data */
 	char *str = NULL;      /* expanded subject string */
+	char *rep = NULL;      /* expanded replacement string */
 	int subjlen;           /* length of subject string */
 	int replen;            /* length of replacement string */
 	int offset = 0;        /* subject string offset */
@@ -471,9 +472,7 @@ char *subst(const char *name, int argc, char **argv)
 
 	/* expand subject string */
 	str = gmk_expand(argv[2]);
-
 	subjlen = strlen(str);
-	replen = strlen(argv[1]);
 
 	do {
 		/* execute regexp */
@@ -484,7 +483,16 @@ char *subst(const char *name, int argc, char **argv)
 			goto end_subst;
 		}
 
-		if (ncap > 0) {
+		if (ncap > 0) { /* match found */
+			/* set make vars to captured substrings */
+			set_vars(str, ovec, ncap);
+			/* set named make vars to captured substrings */
+			set_named_vars(re, str, ovec, ncap);
+
+			/* expand replacement string */
+			rep = gmk_expand(argv[1]);
+			replen = strlen(rep);
+
 			newlen = retlen + (ovec[0] - offset) + replen;
 			s = str_extend(retstr, newlen + 1);
 			if (s == NULL) {
@@ -493,14 +501,15 @@ char *subst(const char *name, int argc, char **argv)
 			retstr = s;
 
 			strncpy(retstr + retlen, str + offset, ovec[0] - offset);
-			strncpy(retstr + retlen + ovec[0] - offset, argv[1], replen + 1);
+			strncpy(retstr + retlen + ovec[0] - offset, rep, replen + 1);
 			retlen += ovec[0] - offset + replen;
+
+			/* free expanded replacement string */
+			gmk_free(rep);
+			rep = NULL;
 
 			/* where to start next search */
 			offset = ovec[1];
-
-			/* set named make vars to captured substrings */
-			set_named_vars(re, str, ovec, ncap);
 		}
 	} while (global && (ncap != PCRE_ERROR_NOMATCH));
 
@@ -524,14 +533,14 @@ end_subst:
 	#endif
 	}
 
-	/* set make vars to captured substrings */
-	set_vars(str, ovec, ncap);
-
 	if (str != NULL) {
 		gmk_free(str);
 	}
-	return retstr;
+	if (rep != NULL) {
+		gmk_free(rep);
+	}
 
+	return retstr;
 }
 
 int pcre_gmk_setup()
