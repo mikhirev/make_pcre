@@ -43,9 +43,9 @@ to your makefile.
 The plugin provides two functions: `pcre_find` (with shorthand `m`)
 and `pcre_subst` (with shorthand `s`).
 
-### `pcre_match` function ###
+### `pcre_find` function ###
 
-`pcre_match` is similar to builtin `findstring` function, but it takes PCRE
+`pcre_find` is similar to builtin `findstring` function, but it takes PCRE
 pattern instead substring as first argument:
 
     $(pcre_find PATTERN,IN)
