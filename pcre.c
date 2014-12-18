@@ -98,6 +98,7 @@ int vmk_call(const char *mkfunc, const char *fmt, va_list ap)
 	return 0;
 }
 
+#if 0
 /* mk_call() - call make function and pass formatted string as its argument */
 int mk_call(const char *mkfunc, const char *fmt, ...)
 {
@@ -109,6 +110,7 @@ int mk_call(const char *mkfunc, const char *fmt, ...)
 	va_end(args);
 	return res;
 }
+#endif
 
 /* mk_error() - pass formatted string to error make function */
 int mk_error(const char *fmt, ...)
@@ -134,6 +136,7 @@ int mk_warning(const char *fmt, ...)
 	return res;
 }
 
+#if 0
 /* mk_info() - pass formatted string to info make function */
 int mk_info(const char *fmt, ...)
 {
@@ -145,6 +148,7 @@ int mk_info(const char *fmt, ...)
 	va_end(args);
 	return res;
 }
+#endif
 
 /* def_var() - define make variable */
 int def_var(const char *name, const char *value)
