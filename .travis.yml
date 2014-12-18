@@ -14,4 +14,4 @@ install:
   - sudo pip install cpp-coveralls
 script: /usr/local/bin/make check $([ "$CC" = gcc ] && echo "CFLAGS='-Wall -g -fprofile-arcs -ftest-coverage'")
 after_success:
-  - [ "$CC" = gcc ] && coveralls
+  - test "$CC" = gcc && coveralls
