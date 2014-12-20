@@ -203,11 +203,11 @@ static int parse_comp_opt(const char flag, const char *func)
 
 	switch (flag) {
 	case 'i': /* ignore case */
-		return PCRE_CASELESS;  break;
+		return PCRE_CASELESS;
 	case 'm': /* multi-line */
-		return PCRE_MULTILINE; break;
+		return PCRE_MULTILINE;
 	case 's': /* single-line */
-		return PCRE_DOTALL;    break;
+		return PCRE_DOTALL;
 	case 'u': /* use Unicode properties */
 		pcre_config(PCRE_CONFIG_UNICODE_PROPERTIES, &b);
 		if (b) {
@@ -220,11 +220,11 @@ static int parse_comp_opt(const char flag, const char *func)
 		}
 		break;
 	case 'U': /* ungreedy quantifiers */
-		return PCRE_UNGREEDY;  break;
+		return PCRE_UNGREEDY;
 	case 'x': /* extended regexp */
-		return PCRE_EXTENDED;  break;
+		return PCRE_EXTENDED;
 	case 'X': /* PCRE extras */
-		return PCRE_EXTRA;     break;
+		return PCRE_EXTRA;
 	case '8': /* UTF-8 */
 		pcre_config(PCRE_CONFIG_UTF8, &b);
 		if (b) {
