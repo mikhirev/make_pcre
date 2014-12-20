@@ -25,12 +25,12 @@
 
 int plugin_is_GPL_compatible;
 
-const int MAX_CAP = 256;   /* maximum number of substrings to capture */
-const int MAX_CAP_LEN = 3; /* number of decimal digits in MAX_CAP */
+static const int MAX_CAP = 256;   /* maximum number of substrings to capture */
+static const int MAX_CAP_LEN = 3; /* number of decimal digits in MAX_CAP */
 
-const int MAX_MSG_LEN = 1024; /* max length of error/warning/info message */
+static const int MAX_MSG_LEN = 1024; /* max length of error/warning/info message */
 
-char *str_extend(char *old, size_t size)
+static char *str_extend(char *old, size_t size)
 {
 	char *new = realloc(old, size);
 	if (new == NULL) { /* let make allocate memory or die */
@@ -45,7 +45,7 @@ char *str_extend(char *old, size_t size)
 }
 
 /* esc_str() - escape string before assigning it to make variable */
-char *esc_str(const char *str)
+static char *esc_str(const char *str)
 {
 	const char *ps; /* pointer to char in unescaped string */
 	char *esc;      /* escaped string */
@@ -71,7 +71,7 @@ char *esc_str(const char *str)
 }
 
 /* vmk_call() - call make function and pass formatted string as its argument */
-int vmk_call(const char *mkfunc, const char *fmt, va_list ap)
+static int vmk_call(const char *mkfunc, const char *fmt, va_list ap)
 {
 	char *mkarg, *emkarg, *mk; /* buffer strings */
 
@@ -100,7 +100,7 @@ int vmk_call(const char *mkfunc, const char *fmt, va_list ap)
 
 #if 0
 /* mk_call() - call make function and pass formatted string as its argument */
-int mk_call(const char *mkfunc, const char *fmt, ...)
+static int mk_call(const char *mkfunc, const char *fmt, ...)
 {
 	va_list args; /* function arguments */
 	int res;      /* value to return */
@@ -113,7 +113,7 @@ int mk_call(const char *mkfunc, const char *fmt, ...)
 #endif
 
 /* mk_error() - pass formatted string to error make function */
-int mk_error(const char *fmt, ...)
+static int mk_error(const char *fmt, ...)
 {
 	va_list args;          /* function arguments */
 	int res;      /* value to return */
@@ -125,7 +125,7 @@ int mk_error(const char *fmt, ...)
 }
 
 /* mk_warning() - pass formatted string to warning make function */
-int mk_warning(const char *fmt, ...)
+static int mk_warning(const char *fmt, ...)
 {
 	va_list args;          /* function arguments */
 	int res;      /* value to return */
@@ -138,7 +138,7 @@ int mk_warning(const char *fmt, ...)
 
 #if 0
 /* mk_info() - pass formatted string to info make function */
-int mk_info(const char *fmt, ...)
+static int mk_info(const char *fmt, ...)
 {
 	va_list args;          /* function arguments */
 	int res;      /* value to return */
@@ -151,7 +151,7 @@ int mk_info(const char *fmt, ...)
 #endif
 
 /* def_var() - define make variable */
-int def_var(const char *name, const char *value)
+static int def_var(const char *name, const char *value)
 {
 	char *escv;  /* escaped value */
 	char *mkdef; /* variable definition for make */
@@ -174,7 +174,7 @@ int def_var(const char *name, const char *value)
 }
 
 /* def_nvar() define numbered make variable */
-int def_nvar(int num, const char *value)
+static int def_nvar(int num, const char *value)
 {
 	char *escv;  /* escaped value */
 	char *mkdef; /* variable definition for make */
@@ -197,7 +197,7 @@ int def_nvar(int num, const char *value)
 }
 
 /* parse_comp_opt - return regexp compilation option according to flag */
-int parse_comp_opt(const char flag, const char *func)
+static int parse_comp_opt(const char flag, const char *func)
 {
 	int b; /* PCRE configuration option value */
 
@@ -244,7 +244,7 @@ int parse_comp_opt(const char flag, const char *func)
 }
 
 /* set_vars() - set make variables to captured substrings */
-int set_vars(const char *subj, int *ovec, const int ncap)
+static int set_vars(const char *subj, int *ovec, const int ncap)
 {
 	int i;                           /* loop iterator */
 	const char *cap;                 /* captured substring */
@@ -272,7 +272,7 @@ int set_vars(const char *subj, int *ovec, const int ncap)
 }
 
 /* set_named_vars() - set make variables to substrings captured by name */
-int set_named_vars(const pcre *re, const char *subj, int *ovec, const int ncap)
+static int set_named_vars(const pcre *re, const char *subj, int *ovec, const int ncap)
 {
 	int ncount;      /* name count */
 	int nentrysize;  /* size of name entry */
@@ -305,7 +305,7 @@ int set_named_vars(const pcre *re, const char *subj, int *ovec, const int ncap)
 }
 
 /* match() - function to be attached to make pattern matching function */
-char *match(const char *name, int argc, char **argv)
+static char *match(const char *name, int argc, char **argv)
 {
 	char *pat = NULL;      /* expanded pattern */
 	char *p;               /* iteration pointer */
@@ -417,7 +417,7 @@ end_match:
 	return retstr;
 }
 
-char *subst(const char *name, int argc, char **argv)
+static char *subst(const char *name, int argc, char **argv)
 {
 	char *pat = NULL;      /* expanded pattern */
 	char *p;               /* iteration pointer */
