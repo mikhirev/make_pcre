@@ -389,7 +389,17 @@ static char *match(const char *name, int argc, char **argv)
 			retstr[retlen] = '\0';
 
 			/* where to start next search */
-			offset = ovec[1];
+			if (offset == ovec[1]) { //zero-length match
+				if (offset < len) {
+					// continue with one character shift
+					offset++;
+				} else {
+					// stop global search
+					global = 0;
+				}
+			} else {
+				offset = ovec[1];
+			}
 
 			/* set named make vars to captured substrings */
 			set_named_vars(re, str, ovec, ncap);
@@ -513,7 +523,24 @@ static char *subst(const char *name, int argc, char **argv)
 			rep = NULL;
 
 			/* where to start next search */
-			offset = ovec[1];
+			if (offset == ovec[1]) { //zero-length match
+				if (offset < subjlen) {
+					// continue with one character shift
+					s = str_extend(retstr, retlen + 1);
+					if (s == NULL) {
+						goto end_subst;
+					}
+					retstr = s;
+					strncpy(retstr + retlen, str + offset, 1);
+					retlen++;
+					offset++;
+				} else {
+					// stop global search
+					global = 0;
+				}
+			} else {
+				offset = ovec[1];
+			}
 		}
 	} while (global && (ncap != PCRE_ERROR_NOMATCH));
 
