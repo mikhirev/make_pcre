@@ -104,6 +104,10 @@ of one ore more characters, each of which enables some option:
 
 The following options are implemented:
 
+- `A` makes expression anchored, i. e. constrained to match only at the first
+   matching point in the string. The same as in PHP;
+- `D` forces a `$` metacharacter to match only before a newline at the end
+  of the string, not before any other newlines. The same as in PHP;
 - `E` enables expansion of pattern before compilation. Note that you will need
   to use `$$` instead `$` for matching end of line in this case;
 - `g` enables global search, like in Perl. `pcre_find` will return space

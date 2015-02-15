@@ -2,7 +2,7 @@ ifneq ($(findstring 4.,$(MAKE_VERSION)),4.)
     $(error you need GNU make 4.x to run tests)
 endif
 
-NUMTESTS = 32
+NUMTESTS = 34
 tests := $(foreach num,$(shell seq -f%03g $(NUMTESTS)),test$(num))
 
 load pcre.so
@@ -116,6 +116,18 @@ test030 = -z "$(m test.test,$(subj029))" -a \
 # test zero-length matching
 test031 = "$(m x?,aaa,g)" = ""
 test032 = "$(s x?,!,abcd,g)" = "!a!b!c!d!"
+
+# test `A' option
+test033 = -z "$(m test,atest,A)" -a "$(m test,test,A)" = "test"
+
+# test `D' option
+define subj034
+line1
+line2
+
+endef
+test034 = "$(m line\d$,$(subj034))" = "line2" -a -z "$(m line\d$,$(subj034),D)" -a \
+	  "$(m test$,test,D)" = "test"
 
 ### END OF TEST EXPRESSIONS ###
 
