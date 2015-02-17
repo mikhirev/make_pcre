@@ -204,7 +204,7 @@ static int parse_comp_opt(const char flag, const char *func)
 	switch (flag) {
 	case 'A': /* anchored regexp */
 		return PCRE_ANCHORED;
-	case 'D': /* $ matches at the and of string only */
+	case 'D': /* $ matches at the end of string only */
 		return PCRE_DOLLAR_ENDONLY;
 	case 'i': /* ignore case */
 		return PCRE_CASELESS;
