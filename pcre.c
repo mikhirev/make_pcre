@@ -314,6 +314,7 @@ static char *match(const char *name, int argc, char **argv)
 	char *pat = NULL;      /* expanded pattern */
 	char *p;               /* iteration pointer */
 	int global = 0;        /* global search? */
+	int study = 0;         /* study pattern? */
 	int co = 0;            /* pattern compilation options */
 	pcre *re = NULL;       /* compiled regexp */
 	const char *err;       /* compilation error */
@@ -335,6 +336,9 @@ static char *match(const char *name, int argc, char **argv)
 			case 'g': /* global search */
 				global = 1;
 				break;
+			case 'S': /* study pattern */
+				study = 1;
+				break;
 			default: /* not match-specific option */
 				co |= parse_comp_opt(*p, name);
 				break;
@@ -353,7 +357,7 @@ static char *match(const char *name, int argc, char **argv)
 		goto end_match;
 	}
 
-	if (global) { /* study compiled pattern */
+	if (study) { /* study compiled pattern */
 		sd = pcre_study(re, 0, &err);
 		if (err) {
 			mk_warning("%s: %s", name, err);
@@ -436,6 +440,7 @@ static char *subst(const char *name, int argc, char **argv)
 	char *pat = NULL;      /* expanded pattern */
 	char *p;               /* iteration pointer */
 	int global = 0;        /* global search? */
+	int study = 0;         /* study pattern? */
 	int co = 0;            /* pattern compilation options */
 	pcre *re = NULL;       /* compiled regexp */
 	const char *err;       /* compilation error */
@@ -462,6 +467,9 @@ static char *subst(const char *name, int argc, char **argv)
 			case 'g': /* global search */
 				global = 1;
 				break;
+			case 'S': /* study pattern */
+				study = 1;
+				break;
 			default: /* not subst-specific option */
 				co |= parse_comp_opt(*p, name);
 				break;
@@ -480,7 +488,7 @@ static char *subst(const char *name, int argc, char **argv)
 		goto end_subst;
 	}
 
-	if (global) { /* study compiled pattern */
+	if (study) { /* study compiled pattern */
 		sd = pcre_study(re, 0, &err);
 		if (err) {
 			mk_warning("%s: %s", name, err);

@@ -97,10 +97,10 @@ Options
 Both `pcre_find` and `pcre_subst` can take an optional argument consisting
 of one ore more characters, each of which enables some option:
 
-    $(pcre_find PATTERN,IN,EgimsuUxX8)
-    $(m PATTERN,IN,EgimsuUxX8)
-    $(pcre_subst PATTERN,REPLACEMENT,TEXT,EgimsuUxX8)
-    $(s PATTERN,REPLACEMENT,TEXT,EgimsuUxX8)
+    $(pcre_find PATTERN,IN,ADEgimsSuUxX8)
+    $(m PATTERN,IN,ADEgimsSuUxX8)
+    $(pcre_subst PATTERN,REPLACEMENT,TEXT,ADEgimsSuUxX8)
+    $(s PATTERN,REPLACEMENT,TEXT,ADEgimsSuUxX8)
 
 The following options are implemented:
 
@@ -119,6 +119,7 @@ The following options are implemented:
   as in Perl;
 - `s` forces `.` metacharacter to match any character including newline.
   The same as in Perl;
+- `S` enables additional studying of compiled regexp. The same as in PHP;
 - `u` changes the way of processing `\B`, `\b`, `\D`, `\d`, `\S`, `\s`, `\W`,
   `\w` and some of the POSIX character classes forsing them to use Unicode
   properties;

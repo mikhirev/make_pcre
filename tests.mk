@@ -2,7 +2,7 @@ ifneq ($(findstring 4.,$(MAKE_VERSION)),4.)
     $(error you need GNU make 4.x to run tests)
 endif
 
-NUMTESTS = 34
+NUMTESTS = 36
 tests := $(foreach num,$(shell seq -f%03g $(NUMTESTS)),test$(num))
 
 load pcre.so
@@ -128,6 +128,13 @@ line2
 endef
 test034 = "$(m line\d$,$(subj034))" = "line2" -a -z "$(m line\d$,$(subj034),D)" -a \
 	  "$(m test$,test,D)" = "test"
+
+# test `S' option
+# no way to check directly that it really works, so just enshure that
+# it does not break anything
+# TODO: add indirect (speed) test
+test035 = "$(m test,test,S)" = test
+test036 = "$(s a,x,a,S)" = "x"
 
 ### END OF TEST EXPRESSIONS ###
 
