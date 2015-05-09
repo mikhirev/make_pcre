@@ -121,7 +121,7 @@ The following options are implemented:
   The same as in Perl;
 - `S` enables additional studying of compiled regexp. The same as in PHP;
 - `u` changes the way of processing `\B`, `\b`, `\D`, `\d`, `\S`, `\s`, `\W`,
-  `\w` and some of the POSIX character classes forsing them to use Unicode
+  `\w` and some of the POSIX character classes forcing them to use Unicode
   properties;
 - `U` ungreedies quantifiers by default (they still can be made greedy
   if followed by `?`);
@@ -129,7 +129,7 @@ The following options are implemented:
   The same as in Perl;
 - `X` enables extra PCRE functionality making the pattern incompatible to Perl.
   See PCRE documentation for additional information;
-- `8` makes both pattern and subject string treated as UTF8.
+- `8` makes both pattern and subject string treated as UTF-8.
 
 See also
 --------
