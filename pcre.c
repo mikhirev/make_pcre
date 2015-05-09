@@ -25,10 +25,14 @@
 
 int plugin_is_GPL_compatible;
 
-static const int MAX_CAP = 256;   /* maximum number of substrings to capture */
-static const int MAX_CAP_LEN = 3; /* number of decimal digits in MAX_CAP */
+/* maximum number of substrings to capture */
+static const int MAX_CAP = 256;
 
-static const int MAX_MSG_LEN = 1024; /* max length of error/warning/info message */
+/* number of decimal digits in MAX_CAP */
+static const int MAX_CAP_LEN = 3;
+
+/* max length of error/warning/info message */
+static const int MAX_MSG_LEN = 1024;
 
 static char *str_extend(char *old, size_t size)
 {
@@ -115,7 +119,7 @@ static int mk_call(const char *mkfunc, const char *fmt, ...)
 /* mk_error() - pass formatted string to error make function */
 static int mk_error(const char *fmt, ...)
 {
-	va_list args;          /* function arguments */
+	va_list args; /* function arguments */
 	int res;      /* value to return */
 
 	va_start(args, fmt);
@@ -127,7 +131,7 @@ static int mk_error(const char *fmt, ...)
 /* mk_warning() - pass formatted string to warning make function */
 static int mk_warning(const char *fmt, ...)
 {
-	va_list args;          /* function arguments */
+	va_list args; /* function arguments */
 	int res;      /* value to return */
 
 	va_start(args, fmt);
@@ -218,9 +222,9 @@ static int parse_comp_opt(const char flag, const char *func)
 			return PCRE_UCP;
 		} else {
 			mk_warning("%s: PCRE library does not support "
-					"Unicode properties, "
-					"`%c' option is ignored",
-					func, flag);
+			           "Unicode properties, "
+			           "`%c' option is ignored",
+			           func, flag);
 		}
 		break;
 	case 'U': /* ungreedy quantifiers */
@@ -235,9 +239,9 @@ static int parse_comp_opt(const char flag, const char *func)
 			return PCRE_UTF8;
 		} else {
 			mk_warning("%s: PCRE library does not support "
-					"UTF-8, "
-					"`%c' option is ignored",
-					func, flag);
+			           "UTF-8, "
+			           "`%c' option is ignored",
+			           func, flag);
 		}
 		break;
 	default: /* unknown option */
@@ -260,8 +264,8 @@ static int set_vars(const char *subj, int *ovec, const int ncap)
 		caplen = pcre_get_substring(subj, ovec, ncap, i, &cap);
 		if (caplen < 0) { /* unable to get substring */
 			mk_error("cannot get substring: "
-					"pcre_get_substring() returned %d",
-					caplen);
+			         "pcre_get_substring() returned %d",
+			         caplen);
 			break;
 		}
 		def_nvar(i, cap);
@@ -276,7 +280,8 @@ static int set_vars(const char *subj, int *ovec, const int ncap)
 }
 
 /* set_named_vars() - set make variables to substrings captured by name */
-static int set_named_vars(const pcre *re, const char *subj, int *ovec, const int ncap)
+static int set_named_vars(const pcre *re, const char *subj, int *ovec,
+                          const int ncap)
 {
 	int ncount;      /* name count */
 	int nentrysize;  /* size of name entry */
@@ -294,12 +299,12 @@ static int set_named_vars(const pcre *re, const char *subj, int *ovec, const int
 	pcre_fullinfo(re, NULL, PCRE_INFO_NAMETABLE, &ntable);
 	for (i = 0; i < ncount; i++) {
 		n = ntable + (i * nentrysize) + 2;
-		caplen = pcre_get_named_substring(re, subj, ovec,
-				ncap, n, &cap);
+		caplen =
+		    pcre_get_named_substring(re, subj, ovec, ncap, n, &cap);
 		if (caplen < 0) { /* unable to get substring */
 			mk_error("cannot get substring: "
-					"pcre_get_substring() returned %d",
-					caplen);
+			         "pcre_get_substring() returned %d",
+			         caplen);
 			break;
 		}
 		def_var(n, cap);
@@ -323,7 +328,7 @@ static char *match(const char *name, int argc, char **argv)
 	char *str = NULL;      /* expanded subject string */
 	int offset = 0;        /* subject string offset */
 	int ncap = 0;          /* number of captured substrings */
-	int ovec[MAX_CAP*3];   /* ovector */
+	int ovec[MAX_CAP * 3]; /* ovector */
 	char *retstr = NULL;   /* string to be returned */
 	int retlen = 0;        /* length of retstr */
 
@@ -348,7 +353,7 @@ static char *match(const char *name, int argc, char **argv)
 
 	if (pat == NULL) { /* compile unexpanded pattern */
 		re = pcre_compile(argv[0], co, &err, &erroffset, NULL);
-	} else {           /* compile expanded pattern */
+	} else { /* compile expanded pattern */
 		re = pcre_compile(pat, co, &err, &erroffset, NULL);
 		gmk_free(pat);
 	}
@@ -370,10 +375,12 @@ static char *match(const char *name, int argc, char **argv)
 
 	do {
 		/* execute regexp */
-		ncap = pcre_exec(re, sd, str, strlen(str), offset, 0,
-				ovec, MAX_CAP*3);
-		if ((ncap < 0) && (ncap != PCRE_ERROR_NOMATCH)) { /* error occured */
-			mk_error("%s: pattern matching error: %d\n", name, ncap);
+		ncap = pcre_exec(re, sd, str, strlen(str), offset, 0, ovec,
+		                 MAX_CAP * 3);
+		if ((ncap < 0) && (ncap != PCRE_ERROR_NOMATCH)) {
+			/* error occured */
+			mk_error("%s: pattern matching error: %d\n", name,
+			         ncap);
 		}
 
 		if (ncap > 0) { /* copy or append matched string to retstr */
@@ -397,12 +404,12 @@ static char *match(const char *name, int argc, char **argv)
 			retstr[retlen] = '\0';
 
 			/* where to start next search */
-			if (offset == ovec[1]) { //zero-length match
+			if (offset == ovec[1]) { /* zero-length match */
 				if (offset < len) {
-					// continue with one character shift
+					/* continue with one character shift */
 					offset++;
 				} else {
-					// stop global search
+					/* stop global search */
 					global = 0;
 				}
 			} else {
@@ -419,11 +426,11 @@ end_match:
 		pcre_free(re);
 	}
 	if (sd != NULL) {
-	#if (PCRE_MAJOR < 8) || ((PCRE_MAJOR == 8) && (PCRE_MINOR < 20))
+#if (PCRE_MAJOR < 8) || ((PCRE_MAJOR == 8) && (PCRE_MINOR < 20))
 		pcre_free(sd);
-	#else
+#else
 		pcre_free_study(sd);
-	#endif
+#endif
 	}
 
 	/* set make vars to captured substrings */
@@ -452,7 +459,7 @@ static char *subst(const char *name, int argc, char **argv)
 	int replen;            /* length of replacement string */
 	int offset = 0;        /* subject string offset */
 	int ncap = 0;          /* number of captured substrings */
-	int ovec[MAX_CAP*3];   /* ovector */
+	int ovec[MAX_CAP * 3]; /* ovector */
 	char *retstr = NULL;   /* string to be returned */
 	int retlen = 0;        /* length of retstr */
 	int newlen;            /* length of retstr after appending new part */
@@ -479,7 +486,7 @@ static char *subst(const char *name, int argc, char **argv)
 
 	if (pat == NULL) { /* compile unexpanded pattern */
 		re = pcre_compile(argv[0], co, &err, &erroffset, NULL);
-	} else {           /* compile expanded pattern */
+	} else { /* compile expanded pattern */
 		re = pcre_compile(pat, co, &err, &erroffset, NULL);
 		gmk_free(pat);
 	}
@@ -502,10 +509,12 @@ static char *subst(const char *name, int argc, char **argv)
 
 	do {
 		/* execute regexp */
-		ncap = pcre_exec(re, sd, str, subjlen, offset, 0,
-				ovec, MAX_CAP*3);
-		if ((ncap < 0) && (ncap != PCRE_ERROR_NOMATCH)) { /* error occured */
-			mk_error("%s: pattern matching error: %d\n", name, ncap);
+		ncap = pcre_exec(re, sd, str, subjlen, offset, 0, ovec,
+		                 MAX_CAP * 3);
+		if ((ncap < 0) && (ncap != PCRE_ERROR_NOMATCH)) {
+			/* error occured */
+			mk_error("%s: pattern matching error: %d\n", name,
+			         ncap);
 			goto end_subst;
 		}
 
@@ -526,8 +535,10 @@ static char *subst(const char *name, int argc, char **argv)
 			}
 			retstr = s;
 
-			strncpy(retstr + retlen, str + offset, ovec[0] - offset);
-			strncpy(retstr + retlen + ovec[0] - offset, rep, replen + 1);
+			strncpy(retstr + retlen, str + offset,
+			        ovec[0] - offset);
+			strncpy(retstr + retlen + ovec[0] - offset, rep,
+			        replen + 1);
 			retlen += ovec[0] - offset + replen;
 
 			/* free expanded replacement string */
@@ -535,19 +546,19 @@ static char *subst(const char *name, int argc, char **argv)
 			rep = NULL;
 
 			/* where to start next search */
-			if (offset == ovec[1]) { //zero-length match
+			if (offset == ovec[1]) { /* zero-length match */
 				if (offset < subjlen) {
-					// continue with one character shift
+					/* continue with one character shift */
 					s = str_extend(retstr, retlen + 1);
 					if (s == NULL) {
 						goto end_subst;
 					}
 					retstr = s;
-					strncpy(retstr + retlen, str + offset, 1);
+					retstr[retlen] = str[offset];
 					retlen++;
 					offset++;
 				} else {
-					// stop global search
+					/* stop global search */
 					global = 0;
 				}
 			} else {
@@ -569,11 +580,11 @@ end_subst:
 		pcre_free(re);
 	}
 	if (sd != NULL) {
-	#if (PCRE_MAJOR < 8) || ((PCRE_MAJOR == 8) && (PCRE_MINOR < 20))
+#if (PCRE_MAJOR < 8) || ((PCRE_MAJOR == 8) && (PCRE_MINOR < 20))
 		pcre_free(sd);
-	#else
+#else
 		pcre_free_study(sd);
-	#endif
+#endif
 	}
 
 	if (str != NULL) {
@@ -590,12 +601,12 @@ int pcre_gmk_setup()
 {
 	/* add function for pattern matching */
 	gmk_add_function("pcre_find", (gmk_func_ptr)match, 2, 3,
-			GMK_FUNC_NOEXPAND);
+	                 GMK_FUNC_NOEXPAND);
 	gmk_add_function("m", (gmk_func_ptr)match, 2, 3, GMK_FUNC_NOEXPAND);
 
 	/* add function for pattern substitution */
 	gmk_add_function("pcre_subst", (gmk_func_ptr)subst, 3, 4,
-			GMK_FUNC_NOEXPAND);
+	                 GMK_FUNC_NOEXPAND);
 	gmk_add_function("s", (gmk_func_ptr)subst, 3, 4, GMK_FUNC_NOEXPAND);
 
 	return 1;
