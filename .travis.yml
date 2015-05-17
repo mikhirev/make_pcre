@@ -9,9 +9,9 @@ before_install:
   - sudo apt-get update -q
   - wget http://ftp.gnu.org/gnu/make/make-${MAKE_VER}.tar.bz2 -O - | bunzip2 | tar -xvC /tmp
 install:
-  - sudo apt-get install -yq libpcre3-dev
+  - sudo apt-get install -yq libpcre3-dev valgrind
   - pushd /tmp/make-${MAKE_VER} && ./configure && make -j2 && sudo make install ; popd
   - sudo pip install cpp-coveralls
-script: if test "$CC" = gcc; then /usr/local/bin/make check 'CFLAGS=-Wall -g -fprofile-arcs -ftest-coverage'; else /usr/local/bin/make check; fi
+script: if test "$CC" = gcc; then /usr/local/bin/make check 'CFLAGS=-Wall -g -fprofile-arcs -ftest-coverage' 'GNUMAKE4=valgrind -q --error-exitcode=125 /usr/local/bin/make'; else /usr/local/bin/make check 'GNUMAKE4=valgrind -q --error-exitcode=125 /usr/local/bin/make'; fi
 after_success:
   - test "$CC" = gcc && coveralls
